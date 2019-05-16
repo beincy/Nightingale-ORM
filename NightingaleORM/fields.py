@@ -1,4 +1,6 @@
 
+from NightingaleORM import dbmodel
+
 class Field:
     def __init__(self, name, column_type, primary_key, default):
         self.name = name  # 字段名
@@ -10,17 +12,17 @@ class Field:
         return '<%s:%s>' % (self.__class__.__name__, self.name)
     
     def __lt__(self,rhs):
-        return (self,'<',rhs)
+        return dbmodel.ConditionModel(self,'<',rhs)
     def __le__(self,rhs):
-        return (self,'<=',rhs)
+        return dbmodel.ConditionModel(self,'<=',rhs)
     def __gt__(self,rhs):
-        return (self,'>',rhs)
+        return dbmodel.ConditionModel(self,'>',rhs)
     def __ge__(self,rhs):
-        return (self,'>=',rhs)
+        return dbmodel.ConditionModel(self,'>=',rhs)
     def __eq__(self,rhs):
-        return (self,'=',rhs)
+        return dbmodel.ConditionModel(self,'=',rhs)
     def __ne__(self,rhs):
-        return (self,'!=',rhs)
+        return dbmodel.ConditionModel(self,'!=',rhs)
 
 
 class StringField(Field):

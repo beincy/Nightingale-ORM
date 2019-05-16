@@ -3,11 +3,27 @@ from NightingaleORM.fields import StringField,IntegerField,DateTimeField,FloatFi
 import datetime,json
 
 
-class TestModel(Model):
-    id=IntegerField('id',True,0)
-    name=StringField('name',False,'')
-    curTime=DateTimeField('thetime',False,datetime.datetime.now())
-    times=FloatField('times',False,0.5)
+class TaskModel(Model):
+    __dbType__='pgsql'
+    __dateBase__='resource'
+    __schema__='DataAnnotations'
+
+    tid=IntegerField('tid',True,0)
+    tname=StringField('tname',False,'')
+    tflag=IntegerField('tflag',False,0)
+    trowstatus=IntegerField('trowstatus',False,0)
+    tremark=StringField('tremark',False,'')
+    tiid=IntegerField('tiid',False,0)
+    tsid=IntegerField('tsid',False,0)
+    tstartdate=DateTimeField('tstartdate',False,datetime.datetime.now())
+    tenddate=DateTimeField('tenddate',False,datetime.datetime.now())
+    tassignorid=IntegerField('tassignorid',False,0)
+    temployerid=IntegerField('temployerid',False,0)
+    tcreater=StringField('tcreater',False,'')
+    tcreatetime=DateTimeField('tcreatetime',False,datetime.datetime.now())
+    tupdater=StringField('tupdater',False,'')
+    tupdatetime=DateTimeField('tupdatetime',False,datetime.datetime.now())
+    tparentid=IntegerField('tparentid',False,0)
     # pass
 
 class big():
@@ -17,13 +33,14 @@ class big():
 
 def mian():
     aa={'id':1,'name':"卞辉"}
-    ee=TestModel(**aa)
+    ee=TaskModel()
+    sql,perm,countsql=ee.addShow(TaskModel.tid,TaskModel.tname).addWhere(TaskModel.tid==1).GetSelectSql(10)
+    print(sql)
+    print(perm)
+    print(countsql)
     # print(TestModel.curTime)
     # print (json.dumps(ee))
     # print (TestModel.name)
-    print (TestModel.id)
-    print (ee.curTime)
-    print(json.dumps(ee))
 
 if __name__ == "__main__":
     mian()

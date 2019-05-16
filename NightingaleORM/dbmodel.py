@@ -1,6 +1,4 @@
 from NightingaleORM.fields import Field
-from NightingaleORM.pgsqlInterpreter import translate
-
 
 class ModelMetaClass(type):
     def __new__(cls, name, bases, attrs):
@@ -34,11 +32,72 @@ class ModelMetaClass(type):
         # for k in mappings:
         #     attrs.pop(k)
         attrs['__mappings__'] = mappings  # 保存属性和列的映射关系
-        attrs['__dateBase__'] = dateBaseName  # 保存属性和列的映射关系
-        attrs['__schema__'] = schemaName  # 保存属性和列的映射关系
-        attrs['__table__'] = tableName  # 保存属性和列的映射关系
+        attrs['__dateBase__'] = dateBaseName  # 保存db name
+        attrs['__schema__'] = schemaName  # 保存schema
+        attrs['__table__'] = tableName  # 保存table name
+        attrs['__dbType__'] = dateBaseType  # 保存数据库类型
+        attrs['__pk__'] = primaryKey  # 保存数据库类型
         return type.__new__(cls, name, bases, attrs)
 
+class BracketModel:
+    '''
+    括号整体类，括号的条件会关联在一起
+    '''
+    whereList=[]
+    relation='AND'
+    def __init__(self,model,relation):
+        self.orginModel=model
+        self.BracketModel=relation
+
+    def addWhere(self,operation,relation='AND'):
+        '''
+        添加where条件
+        operation:class ConditionModel or tuple like ('id','>',1)
+        relation:'and' or 'or'
+        '''
+        if isinstance(operation,ConditionModel):
+            operation.relation=relation
+            self.whereList.append(ConditionModel)
+        elif isinstance(operation,tuple) and len(operation)==3:
+            con=ConditionModel(*operation)
+            con.relation=relation
+            self.whereList.append(con)
+        return self
+    
+    def endBracket(self):
+        self.orginModel.addBracketsWhere(self)
+        return self.orginModel
+
+class ConditionModel:
+    fields='' #字段
+    operation='=' #操作符
+    value='' #值
+    _relation='' #与前一个条件的关系
+
+    def __init__(self,fields,operation,value):
+        self.fields,self.operation,self.value=fields,operation,value 
+    @property
+    def relation(self): 
+        return self._relation
+    @relation.setter
+    def relation(self,value):
+        if isinstance(value,str):
+            self._relation= value.upper()
+
+class JoinConditionModel():
+        joinType=''#the type of  join 
+        onList=[] # the condition affter on 
+        def __init__(self,joinType):
+            self.joinType=joinType.upper()
+
+        def addOn(self,condition):
+            self.onList.append(condition)
+
+class OrderMOdel:
+    field=''
+    orderType='ASC'
+    def __init__(self,field,orderType):
+        self.field,self.orderType=field,orderType
 
 class Model(dict, metaclass=ModelMetaClass):
     def __init__(self, **kw):
@@ -65,9 +124,21 @@ class Model(dict, metaclass=ModelMetaClass):
 
     __showFields__=[]
     __orderFields__=[]
-    __bracketsWhereFields__={}
+    __whereFields__=[]
+    __bracketsWhereFields__=[]
     __Joins__=[]
     __alias__=''
+
+    _interpreter=None#sql翻译器
+
+    def addBracketsWhere(self,bracket:BracketModel):
+        '''
+        bracket:BracketModel
+        '''
+        if isinstance(bracket,BracketModel) and  len(bracket.whereList)>0:
+            self.__bracketsWhereFields__.append(bracket)
+        
+
     def addShow(self,*args):
         '''
         添加查询的fields
@@ -75,19 +146,28 @@ class Model(dict, metaclass=ModelMetaClass):
         self.__showFields__+=args
         return self
     
+    def startBrackets(self,relation='AND'):
+        '''
+        开始括号 开始括号
+        relation:
+        '''
+        return BracketModel(self,relation)
     
-    def addWhere(self,operation,relation='AND',bracketsTag=0):
+    def addWhere(self,operation,relation='AND'):
         '''
         添加where条件
-        operation:(fields,operation,value)
+        operation:class ConditionModel or tuple like ('id','>',1)
         relation:'and' or 'or'
-        bracketsTag:same tag add in same brackets
         '''
-        if bracketsTag not in self.__bracketsWhereFields__:
-            self.__bracketsWhereFields__[bracketsTag]=[operation+(relation.upper())]
-        else:
-            self.__bracketsWhereFields__[bracketsTag].append(operation+(relation.upper()))
+        if isinstance(operation,ConditionModel):
+            operation.relation=relation
+            self.__whereFields__.append(operation)
+        elif isinstance(operation,tuple) and len(operation)==3:
+            con=ConditionModel(*operation)
+            con.relation=relation
+            self.__whereFields__.append(con)
         return self
+
 
     def addTableAlias(self,tableAlias):
         self.__alias__=tableAlias
@@ -97,37 +177,106 @@ class Model(dict, metaclass=ModelMetaClass):
         '''
         添加排序的的fields，升序
         '''
-        self.__orderFields__.append((field,'ASC'))
+        self.__orderFields__.append(OrderMOdel(field,'ASC'))
         return self
     
     def addOrderDesc(self,field):
         '''
         添加排序字段，降序
         '''
-        self.__orderFields__.append((field,'DESC'))
+        self.__orderFields__.append(OrderMOdel(field,'DESC'))
         return self
 
 
-    def addJoin(self,operation,joinType='JOIN',alias1='',alias2=''):
+    def addJoin(self,*operation,joinType='JOIN'):
         '''
         添加Join条件
         model1 joinType model2 alias on operation
         '''
-        self.__Joins__.append((operation,joinType.upper(),alias1,alias2))
+        join=JoinConditionModel(joinType)
+        self.__Joins__.append(join)
         return self
+    
     def addJoinStr(self,joinStr:str):
         '''
         添加Join条件
         joinStr
         '''
-        if not isinstance(joinStr,str): 
-            return 'joinStr must be str'
-        self.__Joins__.append((joinStr,None,None,None))
+        if  isinstance(joinStr,str): 
+            self.__Joins__.append(joinStr)
         return self
-
-    def GetSelectSql(self)->str:
-        pass
     
+    def loadInterpreter(self,customModule):
+        '''
+        添加翻译其，默认自动识别，可手动传入，进行覆盖。不传递则自动识别
+        add Interpreter ，default pgsql 
+        '''
+        self._interpreter=customModule
+
+    def GetSelectSql(self,count)->str:
+        item=()
+        if self._interpreter:
+            pass
+        elif self.__dbType__.lower()=='pgsql':
+            import NightingaleORM.pgsqlInterpreter as mpgsql
+            item=mpgsql.translateSelect(
+                self.__dateBase__,
+                self.__schema__,
+                self.__table__,
+                self.__alias__,
+                self.__showFields__,
+                self.__Joins__,
+                self.__whereFields__,
+                self.__bracketsWhereFields__,
+                self.__orderFields__,
+                self.__pk__,
+                count,
+                0)
+        return item
+
+    def GetPageOfList(self,index,pageSize):
+        '''
+        index:the index of pages
+        pageSize:the size of each page
+        '''
+        if self._interpreter:
+            pass
+        elif self.__dbType__.lower()=='pgsql':
+            import NightingaleORM.pgsqlInterpreter as mpgsql
+        # 这里是获取实际的值
+        item=mpgsql.translateSelect(
+                self.__dateBase__,
+                self.__schema__,
+                self.__table__,
+                self.__alias__,
+                self.__showFields__,
+                self.__Joins__,
+                self.__whereFields__,
+                self.__bracketsWhereFields__,
+                self.__orderFields__,
+                self.__pk__,
+                pageSize,
+                (index-1)*pageSize)
+        # 这里是获取总数的sql
+        item2=mpgsql.translateSelect(
+                self.__dateBase__,
+                self.__schema__,
+                self.__table__,
+                self.__alias__,
+                ['coungt(1)'],
+                self.__Joins__,
+                self.__whereFields__,
+                self.__bracketsWhereFields__,
+                self.__orderFields__,
+                self.__pk__,
+                pageSize,
+                (index-1)*pageSize)    
+
+        return item+item2
+    
+
+
+
 
 
     
