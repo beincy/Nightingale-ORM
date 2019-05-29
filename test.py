@@ -31,16 +31,35 @@ class big():
     name='ispig'
 
 
+class ComplexEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            return json.JSONEncoder.default(self, obj)
+
 def mian():
-    aa={'id':1,'name':"卞辉"}
+    aa={'tid':1,'tname':"卞辉"}
     ee=TaskModel()
-    sql,perm,countsql=ee.addShow(TaskModel.tid,TaskModel.tname).addWhere(TaskModel.tid==1).GetSelectSql(10)
+    sql,perm=ee.addUpdate(TaskModel.tname=="cat").addWhere(TaskModel.tid==1).updateSql()
     print(sql)
     print(perm)
-    print(countsql)
+    # print(countsql)
     # print(TestModel.curTime)
     # print (json.dumps(ee))
     # print (TestModel.name)
+    # dd=TaskModel(**aa)
+    # dd.tid=1
+    # dd.tname='123'
+    # dd.tflag=1
+    # dd.tcreatetime=datetime.datetime.now()
+    # sql,perm=dd.updateModel()
+    # print(sql)
+    # print(perm)
+    # print(len(perm))
+    # print (json.dumps(dd,cls=ComplexEncoder))
+
 
 if __name__ == "__main__":
     mian()

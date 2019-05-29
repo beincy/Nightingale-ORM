@@ -1,4 +1,5 @@
 from NightingaleORM.fields import Field
+import datetime
 
 class ModelMetaClass(type):
     def __new__(cls, name, bases, attrs):
@@ -122,9 +123,15 @@ class Model(dict, metaclass=ModelMetaClass):
         except KeyError:
             raise AttributeError(r"'Model' object has no attribute '%s'" % key)
 
+    def __setattr__(self, key, value):
+        if key in  self.__mappings__:
+            value=Field.fieldTest(self.__mappings__[key],value)
+        self[key] = value
+
     __showFields__=[]
     __orderFields__=[]
     __whereFields__=[]
+    __updateFields__=[]
     __bracketsWhereFields__=[]
     __Joins__=[]
     __alias__=''
@@ -156,7 +163,7 @@ class Model(dict, metaclass=ModelMetaClass):
     def addWhere(self,operation,relation='AND'):
         '''
         添加where条件
-        operation:class ConditionModel or tuple like ('id','>',1)
+        operation:class ConditionModel or tuple like ('id','>',1) or string
         relation:'and' or 'or'
         '''
         if isinstance(operation,ConditionModel):
@@ -166,6 +173,8 @@ class Model(dict, metaclass=ModelMetaClass):
             con=ConditionModel(*operation)
             con.relation=relation
             self.__whereFields__.append(con)
+        elif isinstance(operation,str):
+             self.__whereFields__.append(operation)
         return self
 
 
@@ -206,6 +215,20 @@ class Model(dict, metaclass=ModelMetaClass):
             self.__Joins__.append(joinStr)
         return self
     
+    def addUpdate(self,setCollection):
+        '''
+        添加Update条件
+        set:the ConditionModel  .only equal  valid
+        '''
+        if isinstance(setCollection,ConditionModel):
+            self.__updateFields__.append(setCollection)
+        elif isinstance(setCollection,tuple) and len(setCollection)==3:
+            con=ConditionModel(*setCollection)
+            self.__updateFields__.append(con)
+        elif isinstance(setCollection,str):
+             self.__updateFields__.append(setCollection)
+        return self
+
     def loadInterpreter(self,customModule):
         '''
         添加翻译其，默认自动识别，可手动传入，进行覆盖。不传递则自动识别
@@ -213,38 +236,43 @@ class Model(dict, metaclass=ModelMetaClass):
         '''
         self._interpreter=customModule
 
-    def GetSelectSql(self,count)->str:
+    def selectSql(self,count)->str:
         item=()
+        myInterpreter=None
         if self._interpreter:
-            pass
+            myInterpreter=self._interpreter
         elif self.__dbType__.lower()=='pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
-            item=mpgsql.translateSelect(
-                self.__dateBase__,
-                self.__schema__,
-                self.__table__,
-                self.__alias__,
-                self.__showFields__,
-                self.__Joins__,
-                self.__whereFields__,
-                self.__bracketsWhereFields__,
-                self.__orderFields__,
-                self.__pk__,
-                count,
-                0)
+            myInterpreter=mpgsql
+        item=myInterpreter.translateSelect(
+            self.__dateBase__,
+            self.__schema__,
+            self.__table__,
+            self.__alias__,
+            self.__showFields__,
+            self.__Joins__,
+            self.__whereFields__,
+            self.__bracketsWhereFields__,
+            self.__orderFields__,
+            self.__pk__,
+            count,
+            0)
         return item
 
-    def GetPageOfList(self,index,pageSize):
+    def pageOfList(self,index,pageSize):
         '''
         index:the index of pages
         pageSize:the size of each page
         '''
+        myInterpreter=None
         if self._interpreter:
-            pass
+             # 这里是获取实际的值
+            myInterpreter=self._interpreter
         elif self.__dbType__.lower()=='pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
+            myInterpreter=mpgsql
         # 这里是获取实际的值
-        item=mpgsql.translateSelect(
+        item=myInterpreter.translateSelect(
                 self.__dateBase__,
                 self.__schema__,
                 self.__table__,
@@ -258,26 +286,74 @@ class Model(dict, metaclass=ModelMetaClass):
                 pageSize,
                 (index-1)*pageSize)
         # 这里是获取总数的sql
-        item2=mpgsql.translateSelect(
-                self.__dateBase__,
-                self.__schema__,
-                self.__table__,
-                self.__alias__,
-                ['coungt(1)'],
-                self.__Joins__,
-                self.__whereFields__,
-                self.__bracketsWhereFields__,
-                self.__orderFields__,
-                self.__pk__,
-                pageSize,
-                (index-1)*pageSize)    
+        # item2=myInterpreter.translateSelect(
+        #         self.__dateBase__,
+        #         self.__schema__,
+        #         self.__table__,
+        #         self.__alias__,
+        #         ['coungt(1)'],
+        #         self.__Joins__,
+        #         self.__whereFields__,
+        #         self.__bracketsWhereFields__,
+        #         self.__orderFields__,
+        #         self.__pk__,
+        #         pageSize,
+        #         (index-1)*pageSize)    
 
-        return item+item2
+        return item
     
+    def getInsertSql(self):
+        '''
+        获取新增的的sql
+        '''
+        myInterpreter=None
+        if self._interpreter:
+            myInterpreter=self._interpreter
+        elif self.__dbType__.lower()=='pgsql':
+            import NightingaleORM.pgsqlInterpreter as mpgsql
+            myInterpreter=mpgsql
+        
+        item=myInterpreter.translateInsert(
+             self.__dateBase__,
+            self.__schema__,
+            self.__table__,
+            self.__mappings__,
+            self)
+        return item
 
+    def updateModel(self):
+        '''
+        获取新增的的sql
+        '''
+        myInterpreter=None
+        if self._interpreter:
+            myInterpreter=self._interpreter
+        elif self.__dbType__.lower()=='pgsql':
+            import NightingaleORM.pgsqlInterpreter as mpgsql
+            myInterpreter=mpgsql
+        item=myInterpreter.translateUpdateModel(
+            self.__dateBase__,
+            self.__schema__,
+            self.__table__,
+            self.__mappings__,
+            self)
+        return item
 
-
-
-
+    def updateSql(self):
+        item=()
+        myInterpreter=None
+        if self._interpreter:
+            myInterpreter=self._interpreter
+        elif self.__dbType__.lower()=='pgsql':
+            import NightingaleORM.pgsqlInterpreter as mpgsql
+            myInterpreter=mpgsql
+        item=myInterpreter.translateUpdate(
+            self.__dateBase__,
+            self.__schema__,
+            self.__table__,
+            self.__updateFields__,
+            self.__whereFields__,
+            self.__bracketsWhereFields__)
+        return item
     
     
