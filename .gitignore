@@ -1,2 +1,10 @@
 
 NightingaleORM/__pycache__/
+
+dist/
+
+build/
+
+Nightingqle_ORM\.egg-info/
+
+Nightingale_ORM\.egg-info/

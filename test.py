@@ -42,7 +42,7 @@ class ComplexEncoder(json.JSONEncoder):
 def mian():
     aa={'tid':1,'tname':"卞辉"}
     ee=TaskModel()
-    sql,perm=ee.addUpdate(TaskModel.tname=="cat").addWhere(TaskModel.tid==1).updateSql()
+    sql,perm=ee.addUpdate(TaskModel.tname=="cat").addUpdate(TaskModel.tremark=="dog is miaomiao").addWhere(TaskModel.tid==1).updateSql()
     print(sql)
     print(perm)
     # print(countsql)

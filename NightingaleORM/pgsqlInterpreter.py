@@ -24,7 +24,7 @@ FROM {database}{schemaStr}."{table}" {alias}'''
         raise 'where fields cannot be empty'
 
     sqlStr = f'''{sqlStr} 
-WHERE 1=1 {translateWhere(alias,wheres,parameters)}'''
+WHERE 1=1{translateWhere(alias,wheres,parameters)}'''
 
     for bracketItem in brackets:
         sqlStr = f'''{sqlStr} {bracketItem.relation} ({translateWhere(alias,bracketItem.whereList,parameters)})'''
@@ -218,7 +218,7 @@ def translateUpdate(database, schema, table, updates,wheres, brackets):
     parameters = []
     sqlStr=f'''{sqlStr}
 {translateSet(updates,parameters)}
-WHERE 1=1 {translateWhere('',wheres,parameters)}'''
+WHERE 1=1{translateWhere('',wheres,parameters)}'''
     for bracketItem in brackets:
         sqlStr = f'''{sqlStr} {bracketItem.relation} ({translateWhere('',bracketItem.whereList,parameters)})'''
     return sqlStr,parameters
@@ -226,13 +226,13 @@ WHERE 1=1 {translateWhere('',wheres,parameters)}'''
 def translateSet(updates,parameters):
     sqlStr = ''
     if  updates and len(updates)>0:
-        sqlStr = f'''SET'''
+        sqlStr = f'''SET '''
         for eachUpdate in updates:
             if isinstance(eachUpdate, str):
-                sqlStr=f'''{sqlStr} {eachUpdate},'''
+                sqlStr=f'''{sqlStr}{eachUpdate},'''
             else:  
                 parameters.append(eachUpdate.value)
-                sqlStr = f'''{sqlStr} {eachUpdate.fields.name} = ${len(parameters)},'''
+                sqlStr = f'''{sqlStr}{eachUpdate.fields.name} = ${len(parameters)},'''
     sqlStr = sqlStr.strip(',')
     return sqlStr
     
