@@ -27,14 +27,17 @@ FROM {database}{schemaStr}."{table}" {alias}'''
 WHERE 1=1{translateWhere(alias,wheres,parameters)}'''
 
     for bracketItem in brackets:
-        sqlStr = f'''{sqlStr} {bracketItem.relation} ({translateWhere(alias,bracketItem.whereList,parameters)})'''
-    # order
-    sqlStr = f'''{sqlStr} {translateOrder(orders,pk)}'''
+        sqlStr = f'''{sqlStr} {bracketItem.relation} (1=1 {translateWhere(alias,bracketItem.whereList,parameters)})'''
     # countsql
     sqlStrCountTop = f'''{sqlStrCountTop}{sqlStr}'''
+    # order
+    sqlStr = f'''{sqlStr} {translateOrder(orders,pk)}'''
     # limit
-    sqlStr = f'''{sqlStr} 
-LIMIT {count} OFFSET {offset}'''
+    if count>0:
+        sqlStr = f'''{sqlStr} 
+LIMIT {count}'''
+    if offset>0:
+        sqlStr = f'''{sqlStr}  OFFSET {offset}'''
     return (sqlStrTop+sqlStr, parameters, sqlStrCountTop)
 
 # 添加where条件
@@ -153,7 +156,8 @@ def translateInsert(database, schema, table, mapDict, valueDict):
             fields.append(v.name)
             values.append(f'${len(parameters)}')
     if len(parameters) > 0:
-        insertStr = f'''{insertStr} ({','.join(fields)}) VALUES ({','.join(values)})'''
+        insertStr = f'''{insertStr} ({','.join(fields)}) 
+VALUES ({','.join(values)})'''
     return insertStr, parameters
 
 def translateUpdateModel(database, schema, table, mapDict, valueDict):
@@ -220,7 +224,7 @@ def translateUpdate(database, schema, table, updates,wheres, brackets):
 {translateSet(updates,parameters)}
 WHERE 1=1{translateWhere('',wheres,parameters)}'''
     for bracketItem in brackets:
-        sqlStr = f'''{sqlStr} {bracketItem.relation} ({translateWhere('',bracketItem.whereList,parameters)})'''
+        sqlStr = f'''{sqlStr} {bracketItem.relation} (1=1 {translateWhere('',bracketItem.whereList,parameters)})'''
     return sqlStr,parameters
 
 def translateSet(updates,parameters):

@@ -42,23 +42,68 @@ class ComplexEncoder(json.JSONEncoder):
 def mian():
     aa={'tid':1,'tname':"卞辉"}
     ee=TaskModel()
-    sql,perm=ee.addUpdate(TaskModel.tname=="cat").addUpdate(TaskModel.tremark=="dog is miaomiao").addWhere(TaskModel.tid==1).updateSql()
+    # selectSQL,parameters,countSQL=ee.addShow(TaskModel.tname) \
+    #     .addShow("tenddate") \
+    #     .addWhere(TaskModel.tid==1) \
+    #     .addWhere(TaskModel.tupdatetime==datetime.datetime.now()) \
+    #     .startBrackets() \
+    #     .addWhere(TaskModel.tiid==2) \
+    #     .addWhere("temployerid>0") \
+    #     .addWhere(("tassignorid","in","1,2")) \
+    #      addWhere(("tassignorid","in",[1,2])) \
+    #     .addWhere(TaskModel.tremark=='das')\
+    #     .endBracket() \
+    #     .selectSql(100)
+    # print(selectSQL)
+    # print(parameters)
+    # print(countSQL)
+
+    # ee.tname='i am cat'
+    # ee.tremark='喵'
+    # ee.tiid=13579
+    # sql,parameters=ee.insertSql()
+    # oldData={"tid": 201, "tname": "", "tflag": 0, "trowstatus": 0, "tremark": "",
+    #  "tiid": 0, "tsid": 0, "tstartdate":datetime.datetime.strptime("2019-05-16 09:21:25", '%Y-%m-%d %H:%M:%S'), 
+    #  "tenddate": datetime.datetime.strptime("2019-05-18 09:21:25", '%Y-%m-%d %H:%M:%S'), "tassignorid": 0, "temployerid": 0, 
+    #  "tcreater": "", 
+    #  "tcreatetime":  datetime.datetime.strptime("2019-05-19 09:21:25", '%Y-%m-%d %H:%M:%S'), "tupdater": "", 
+    #  "tupdatetime":  datetime.datetime.strptime("2019-05-20 09:21:25", '%Y-%m-%d %H:%M:%S'), "tparentid": 0}#this is the data from db  Analog data
+    # ee=TaskModel(**oldData)
+    # ee.tflag=1
+    # ee.tupdatetime=datetime.datetime.now()
+    # ee.tcreatetime=None
+    # sql,parameters=ee.updateModel()
+
+
+    sql,parameters=TaskModel() \
+    .addUpdate(TaskModel.tflag==1) \
+    .addUpdate(TaskModel.tupdatetime==datetime.datetime.now()) \
+    .addWhere(TaskModel.tid==1) \
+    .addWhere(TaskModel.tupdatetime==datetime.datetime.now()) \
+    .startBrackets() \
+    .addWhere(TaskModel.tiid==2) \
+    .addWhere("temployerid>0") \
+    .addWhere(("tassignorid","in","1,2")) \
+    .addWhere(("tassignorid","in",[1,2])) \
+    .addWhere(TaskModel.tremark=='das')\
+    .endBracket() \
+    .updateSql()
     print(sql)
-    print(perm)
+    print(parameters)
     # print(countsql)
     # print(TestModel.curTime)
     # print (json.dumps(ee))
     # print (TestModel.name)
     # dd=TaskModel(**aa)
-    # dd.tid=1
-    # dd.tname='123'
-    # dd.tflag=1
-    # dd.tcreatetime=datetime.datetime.now()
+    # ee.tid=1
+    # ee.tname='123'
+    # ee.tflag=1
+    # ddee.tcreatetime=datetime.datetime.now()
     # sql,perm=dd.updateModel()
     # print(sql)
     # print(perm)
     # print(len(perm))
-    # print (json.dumps(dd,cls=ComplexEncoder))
+    # print (json.dumps(ee,cls=ComplexEncoder))
 
 
 if __name__ == "__main__":

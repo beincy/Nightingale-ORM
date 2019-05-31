@@ -58,7 +58,7 @@ class BracketModel:
         '''
         if isinstance(operation,ConditionModel):
             operation.relation=relation
-            self.whereList.append(ConditionModel)
+            self.whereList.append(operation)
         elif isinstance(operation,tuple) and len(operation)==3:
             con=ConditionModel(*operation)
             con.relation=relation
@@ -76,7 +76,7 @@ class ConditionModel:
     _relation='' #与前一个条件的关系
 
     def __init__(self,fields,operation,value):
-        self.fields,self.operation,self.value=fields,operation,value 
+        self.fields,self.operation,self.value=fields,operation.upper(),value 
     @property
     def relation(self): 
         return self._relation
@@ -125,8 +125,8 @@ class Model(dict, metaclass=ModelMetaClass):
 
     def __setattr__(self, key, value):
         if key in  self.__mappings__:
-            value=Field.fieldTest(self.__mappings__[key],value)
-        self[key] = value
+            self[key]=Field.fieldTest(self.__mappings__[key],value)
+        # self[key] = value
 
     __showFields__=[]
     __orderFields__=[]
@@ -302,7 +302,7 @@ class Model(dict, metaclass=ModelMetaClass):
 
         return item
     
-    def getInsertSql(self):
+    def insertSql(self):
         '''
         获取新增的的sql
         '''

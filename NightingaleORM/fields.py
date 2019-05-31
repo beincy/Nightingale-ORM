@@ -38,7 +38,7 @@ class Field:
         '''
         if value is None:
             return feild.default
-        if 'varchar' in feild.column_type:
+        if isinstance(feild,StringField):
             if not isinstance(value, str):
                 return feild.default
             containList = re.findall(r'[^()]+', feild.column_type)
@@ -50,26 +50,27 @@ class Field:
                     return value[:size]
                 return value
             return value
-        elif 'bigint' in feild.column_type:
+        elif isinstance(feild,IntegerField):
             if not isinstance(value, int):
                 return feild.default
+            if 'int' in feild.column_type:
+                if not (-2147483648 < value <2147483647 ):
+                    return feild.default
             return value
-        elif 'int' in feild.column_type:
-            if not isinstance(value, int):
-                return feild.default
-            if not (-2147483648 < value <2147483647 ):
-                return feild.default
-            return value
-        elif 'float' in feild.column_type \
-            or 'decimal' in feild.column_type \
-            or  'double' in feild.column_type :
+        elif isinstance(feild,FloatField):
             if not isinstance(value, float):
                 return feild.default
             return value
-        elif 'time' in feild.column_type :
-            if not isinstance(value, datetime.datetime):
-                return feild.default
-            return value
+        elif isinstance(feild,DateTimeField):
+            if isinstance(value, datetime.datetime):
+                return value 
+            if isinstance(value,str):
+                try:
+                    return datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+                except :
+                    pass
+            return feild.default
+
         return value
 
 
