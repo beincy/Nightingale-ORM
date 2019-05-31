@@ -156,7 +156,8 @@ def translateInsert(database, schema, table, mapDict, valueDict):
             fields.append(v.name)
             values.append(f'${len(parameters)}')
     if len(parameters) > 0:
-        insertStr = f'''{insertStr} ({','.join(fields)}) 
+        insertStr = f'''{insertStr} 
+({','.join(fields)}) 
 VALUES ({','.join(values)})'''
     return insertStr, parameters
 
