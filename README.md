@@ -3,14 +3,17 @@ Lightweight python orm for  mysql or postgresql . it is Simple use
 ## Welcome to the Nightingale-ORM wiki!
 A simple and compact ORM tool that only generates SQL and objects
 It can generate SQL without relying on any database driver，So you can use it to generate any database SQL you want。
+
 一个简单而紧凑的ORM工具，只生成SQL和对象，它可以在不依赖任何数据库驱动程序的情况下生成SQL，因此您可以使用它生成所需的任何数据库SQL。
 ### 那么如何使用他：
 ### Then how to use him:
 ### 1. 定义数据库的实体
 ### 1. Define the entity of the database
 ORM适合关系型数据库。首先我们需要根据数据库的表定义一个model（class）
+
 ORM is suitable for relational databases. First, we need to define a model based on the tables in the database.
 举个例子：
+
 For instance：
 ```
 from NightingaleORM.dbmodel import Model
@@ -39,8 +42,11 @@ class TaskModel(Model):
     # pass
 ```
 模型的名称是表名称，__dbType__ 是数据库类型，默认是postgres，__dateBase__是数据库名称，__schema__是图名称
+
 modelName is table name ， dbType_ is the database type, default is postgres, _dateBase_ is the database name, _schema_ is the graph name.
+
 然后你需要定义你的数据库字段，第一个参数是你表的列名，第二个是是否是主键，第三个字段是默认值，第四个字段是数据库类型如果有的话
+
 hen you need to define your database field. The first parameter is the column name of your table, the second is whether it is the primary key, the third field is the default value, and the fourth field is the database type, if any.
 ```
 tid=IntegerField('tid',True,0,ddl='bigint')
