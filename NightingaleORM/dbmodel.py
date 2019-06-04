@@ -236,7 +236,7 @@ class Model(dict, metaclass=ModelMetaClass):
         '''
         self._interpreter=customModule
 
-    def selectSql(self,count)->str:
+    def selectSql(self,count=0)->str:
         item=()
         myInterpreter=None
         if self._interpreter:
