@@ -78,7 +78,7 @@ def translateWhere(alias, wheres, parameters):
 def translateShow(alias, shows):
     sqlStr = ''
     for showfield in shows:
-        sqlStr = f'''{'' if len(alias)<=0 else f'{alias}.'}{ showfield.name if isinstance(showfield, Field) else showfield},'''
+        sqlStr = f'''{sqlStr}{'' if len(alias)<=0 else f'{alias}.'}{ showfield.name if isinstance(showfield, Field) else showfield},'''
     sqlStr = sqlStr.strip(',')
     return sqlStr
 
@@ -86,19 +86,21 @@ def translateShow(alias, shows):
 def translateJoin(joins, parameters):
     sqlStr = ''
     if joins is not None and len(joins) > 0:
-        sqlStr = f'''
-        '''
+        sqlStr = ''
         for joinfield in joins:
             if isinstance(joinfield, str):
                 sqlStr = f'''{joinfield[0]}'''
             else:
                 onList = joinfield.onList
-                if onList > 0:
-                    joinSchemaStr = '' if len(
-                        onList[0].__schema__) <= 0 else f'.{onList[0].__schema__}'
-                    joinTable = f'''{onList[0].__dateBase__}{joinSchemaStr}.'{onList[0].__table__}' '''
+                if len(onList) > 0:
+                    joinSchemaStr = ''
+                    joinTable = ''
+                    if all([onList[0], onList[0].fields]):
+                        joinSchemaStr=f'.{onList[0].fields.__schema__}' if onList[0].fields.__schema__ else ''
+                        joinTable = f'''{onList[0].fields.__dateBase__}{joinSchemaStr}."{onList[0].fields.__table__}" '''
                     sqlStr = f'''{sqlStr} 
-                    {joinfield.joinType} {joinTable} ON 1=1'''
+{joinfield.joinType} {joinTable} ON'''
+                    isFirst=True
                     for eachOn in onList:
                         if isinstance(eachOn, str):
                             sqlStr = f'''{sqlStr} {eachOn}'''
@@ -106,7 +108,8 @@ def translateJoin(joins, parameters):
                             if isinstance(eachOn.value, str):
                                 parameters.append(eachOn.value)
                             else:
-                                sqlStr = f'''{sqlStr} {eachOn.relation} {eachOn.fields.name} {eachOn.operation} {f'${len(parameters)}' if isinstance(eachOn.value,str) else eachOn.value.name}'''
+                                sqlStr = f'''{sqlStr} {'' if isFirst else eachOn.relation} {eachOn.fields.name} {eachOn.operation} {f'${len(parameters)}' if isinstance(eachOn.value,str) else eachOn.value.name}'''
+                        isFirst=False
     return sqlStr
 
 
@@ -124,7 +127,7 @@ ORDER BY
         sqlStr = sqlStr.strip(',')
     else:
         sqlStr = f'''
-ORDER BY {pk}'''
+ORDER BY {pk.name}'''
     return sqlStr
 
 
@@ -140,7 +143,7 @@ def translateInsert(database, schema, table, mapDict, valueDict):
         raise AttributeError(r"db feild or value not be  none")
 
     schemaStr = '' if len(schema) <= 0 else f'.{schema}'
-    insertStr = f'''INSERT {database}{schemaStr}."{table}"'''  # 执行的sql
+    insertStr = f'''INSERT INTO {database}{schemaStr}."{table}"'''  # 执行的sql
     parameters = []  # 参数化的参数
     fields = []  # 字段名称
     values = []  # 值
@@ -198,7 +201,7 @@ def translateUpdateModel(database, schema, table, mapDict, valueDict):
     updateStr = f'''{updateStr} 
 SET'''
     for index,field in enumerate(fields):
-        updateStr = f'''{updateStr} {field}=${index},'''
+        updateStr = f'''{updateStr} {field}=${index+1},'''
     
     updateStr = updateStr.strip(',')#去除最后一个空格
 

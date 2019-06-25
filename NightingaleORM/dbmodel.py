@@ -37,16 +37,18 @@ class ModelMetaClass(type):
         attrs['__schema__'] = schemaName  # 保存schema
         attrs['__table__'] = tableName  # 保存table name
         attrs['__dbType__'] = dateBaseType  # 保存数据库类型
-        attrs['__pk__'] = primaryKey  # 保存数据库类型
+        attrs['__pk__'] = mappings[primaryKey]  # 保存数据库类型
         return type.__new__(cls, name, bases, attrs)
 
 class BracketModel:
     '''
     括号整体类，括号的条件会关联在一起
     '''
-    whereList=[]
-    relation='AND'
+    # whereList=[]
+    # relation='AND'
     def __init__(self,model,relation):
+        self.whereList=[]
+        self.relation='AND'
         self.orginModel=model
         self.BracketModel=relation
 
@@ -70,12 +72,16 @@ class BracketModel:
         return self.orginModel
 
 class ConditionModel:
-    fields='' #字段
-    operation='=' #操作符
-    value='' #值
-    _relation='' #与前一个条件的关系
+    # fields='' #字段
+    # operation='=' #操作符
+    # value='' #值
+    # _relation='' #与前一个条件的关系
 
     def __init__(self,fields,operation,value):
+        self.fields='' #字段
+        self.operation='=' #操作符
+        self.value='' #值
+        self._relation='' #与前一个条件的关系
         self.fields,self.operation,self.value=fields,operation.upper(),value 
     @property
     def relation(self): 
@@ -86,22 +92,35 @@ class ConditionModel:
             self._relation= value.upper()
 
 class JoinConditionModel():
-        joinType=''#the type of  join 
-        onList=[] # the condition affter on 
+        # joinType=''#the type of  join 
+        # onList=[] # the condition affter on 
         def __init__(self,joinType):
+            self.joinType=''#the type of  join 
+            self.onList=[] # the condition affter on 
             self.joinType=joinType.upper()
 
-        def addOn(self,condition):
+        def addOn(self,condition,relation):
+            condition.relation=relation
             self.onList.append(condition)
 
 class OrderMOdel:
-    field=''
-    orderType='ASC'
+    # field=''
+    # orderType='ASC'
     def __init__(self,field,orderType):
+        self.field=''
+        self.orderType='ASC'
         self.field,self.orderType=field,orderType
 
 class Model(dict, metaclass=ModelMetaClass):
     def __init__(self, **kw):
+        self.__showFields__=[]
+        self.__orderFields__=[]
+        self.__whereFields__=[]
+        self.__updateFields__=[]
+        self.__bracketsWhereFields__=[]
+        self.__Joins__=[]
+        self.__alias__=''
+        self._interpreter=None#sql翻译器
         super(Model, self).__init__(**kw)
         for k in self.__mappings__:
             field = self.__mappings__[k]
@@ -126,6 +145,8 @@ class Model(dict, metaclass=ModelMetaClass):
     def __setattr__(self, key, value):
         if key in  self.__mappings__:
             self[key]=Field.fieldTest(self.__mappings__[key],value)
+        elif key.find("_")==0 :
+            self.__dict__[key]=value
         # self[key] = value
 
     __showFields__=[]
@@ -203,6 +224,12 @@ class Model(dict, metaclass=ModelMetaClass):
         model1 joinType model2 alias on operation
         '''
         join=JoinConditionModel(joinType)
+        for item in operation:
+            if isinstance(item,tuple):
+                join.addOn(item[0],item[1])
+            else:
+                join.addOn(item,'AND')
+        
         self.__Joins__.append(join)
         return self
     
