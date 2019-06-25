@@ -93,7 +93,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                         f.write(f" datetime.datetime.strptime({defaultArray[0]}, '%Y-%m-%d %H:%M:%S')")
                 else:
                     f.write(f" {defaultArray[0]}",)
-            f.write(')'+'\n')
+            f.write(f") #{item['comment']}"+'\n')
 
         f.write('\n')
         f.write('    """\n')
@@ -116,7 +116,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                 for nameItem in valNameArray:
                     valName=valName+(nameItem[:1].upper() + nameItem[1:])
                 valName=valName[:1].lower() + valName[1:]
-            f.write(f"    {ModelName2}DAL.addShow({ModelName}Model.{valName})"+'\n')
+            f.write(f"    {ModelName2}DAL.addShow({ModelName}Model.{valName}) #{item['comment']}"+'\n')
         f.write('\n')
         for item in tableInfo:
             item=dict(item)
@@ -130,7 +130,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                 for nameItem in valNameArray:
                     valName=valName+(nameItem[:1].upper() + nameItem[1:])
                 valName=valName[:1].lower() + valName[1:]
-            f.write(f"    {ModelName2}DAL.addWhere({ModelName}Model.{valName}==kwargs['{item['name']}'])"+'\n')
+            f.write(f"    {ModelName2}DAL.addWhere({ModelName}Model.{valName}==kwargs['{item['name']}']) #{item['comment']}"+'\n')
         f.write('\n')
         for item in tableInfo:
             item=dict(item)
@@ -144,7 +144,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                 for nameItem in valNameArray:
                     valName=valName+(nameItem[:1].upper() + nameItem[1:])
                 valName=valName[:1].lower() + valName[1:]
-            f.write(f"    {ModelName2}DAL.addUpdate({ModelName}Model.{valName}==kwargs['{item['name']}'])"+'\n')
+            f.write(f"    {ModelName2}DAL.addUpdate({ModelName}Model.{valName}==kwargs['{item['name']}']) #{item['comment']}"+'\n')
         f.write('\n')
         f.write(f'    dal.getList({ModelName2}DAL)#查询\n')
         f.write(f'    dal.update({ModelName2}DAL)#更新\n')
