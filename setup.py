@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Nightingale-ORM',
-    version=0.4,
+    version='0.9.11',
     description=(
         '一个简单而小巧的orm工具，只用于生成sql和对象，而不依赖db驱动',
         'A simple and compact ORM tool that only generates SQL and objects, not DB drivers'
