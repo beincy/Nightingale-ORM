@@ -2,6 +2,7 @@ import asyncio
 import uvloop
 import asyncpg
 import io
+import sys
 
 DB_CONFIG = {
    'resource': { 'host': '192.168.88.103',
@@ -13,7 +14,7 @@ DB_CONFIG = {
 }
 
 async def main():
-    tableName="wordclass"
+    tableName=sys.argv[1] 
     connection = await asyncpg.connect(**DB_CONFIG['resource'])
     sql=f'''
     SELECT col_description(a.attrelid,a.attnum) as comment,format_type(a.atttypid,a.atttypmod) as type
