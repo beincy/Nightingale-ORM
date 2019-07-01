@@ -89,7 +89,7 @@ def translateJoin(joins, parameters):
         sqlStr = ''
         for joinfield in joins:
             if isinstance(joinfield, str):
-                sqlStr = f'''{joinfield[0]}'''
+                sqlStr = f'''{joinfield}'''
             else:
                 onList = joinfield.onList
                 if len(onList) > 0:
