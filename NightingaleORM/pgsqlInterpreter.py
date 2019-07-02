@@ -31,7 +31,7 @@ WHERE 1=1{translateWhere(alias,wheres,parameters)}'''
     # countsql
     sqlStrCountTop = f'''{sqlStrCountTop}{sqlStr}'''
     # order
-    sqlStr = f'''{sqlStr} {translateOrder(orders,pk)}'''
+    sqlStr = f'''{sqlStr} {translateOrder(orders,pk,alias)}'''
     # limit
     if count>0:
         sqlStr = f'''{sqlStr} 
@@ -114,17 +114,16 @@ def translateJoin(joins, parameters):
     return sqlStr
 
 
-def translateOrder(orders, pk):
+def translateOrder(orders, pk,alias):
     sqlStr = ''
     if orders and len(orders) > 0:
         sqlStr = f'''
-ORDER BY
-        '''
+ORDER BY'''
         for order in orders:
-            if isinstance(order, str):
-                sqlStr = f'''{sqlStr} {order}'''
+            if isinstance(order.field, str):
+                sqlStr = f'''{sqlStr}{order.field} {order.orderType}'''
             else:
-                sqlStr = f'''{sqlStr} {order.field.name} {order.orderType},'''
+                sqlStr = f'''{sqlStr}{'' if len(alias)<=0 else f'{alias}.'}{order.field.name} {order.orderType},'''
         sqlStr = sqlStr.strip(',')
     else:
         sqlStr = f'''
