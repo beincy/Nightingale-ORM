@@ -134,11 +134,11 @@ class Model(dict, metaclass=ModelMetaClass):
 
     # 实现__getattr__与__setattr__方法，可以使引用属性像引用普通字段一样  如self['id']
 
-    def __getattr__(self, key):
+    def __getattribute__(self, key):
         try:
-            if key not in self.__mappings__:
-                raise AttributeError(r"'%s' is not field of db." % key)
-            return self[key]
+            if key  in object.__getattribute__(self, '__mappings__') :
+                return self[key]
+            return object.__getattribute__(self, key)
         except KeyError:
             raise AttributeError(r"'Model' object has no attribute '%s'" % key)
 

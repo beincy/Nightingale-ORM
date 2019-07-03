@@ -119,4 +119,7 @@ def mian():
 
 if __name__ == "__main__":
     mian()
+
+#python setup.py sdist bdist_wheel
+#twine upload dist/*
     
