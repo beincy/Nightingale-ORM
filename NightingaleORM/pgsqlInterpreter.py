@@ -121,9 +121,9 @@ def translateOrder(orders, pk,alias):
 ORDER BY'''
         for order in orders:
             if isinstance(order.field, str):
-                sqlStr = f'''{sqlStr}{order.field} {order.orderType}'''
+                sqlStr = f'''{sqlStr} {order.field} {order.orderType}'''
             else:
-                sqlStr = f'''{sqlStr}{'' if len(alias)<=0 else f'{alias}.'}{order.field.name} {order.orderType},'''
+                sqlStr = f'''{sqlStr} {'' if len(alias)<=0 else f'{alias}.'}{order.field.name} {order.orderType},'''
         sqlStr = sqlStr.strip(',')
     else:
         sqlStr = f'''
