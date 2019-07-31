@@ -6,12 +6,13 @@ import sys
 import os
 
 DB_CONFIG = {
-    'resource': {'host': '192.168.88.103',
-                 'user': 'postgres',
-                 'password': 'postgres_123',
-                 'port': '5453',
-                 'database': 'resource'
-                 },
+    'resource': {
+        'host': '192.168.88.103',
+        'user': 'postgres',
+        'password': 'postgres_123',
+        'port': '5453',
+        'database': 'resource'
+    },
 }
 
 
@@ -96,27 +97,28 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
     ModelName = ""
     if len(tableNameArray) > 1:
         for nameItem in tableNameArray:
-            ModelName = ModelName+(nameItem[:1].upper() + nameItem[1:])
+            ModelName = ModelName + (nameItem[:1].upper() + nameItem[1:])
     else:
         ModelName = tableName
     ModelName = ModelName[:1].lower() + ModelName[1:]
     projectModelName = f'{dirPath}/{ModelName}Model.py'
     with open(projectModelName, 'w') as f:
-        f.write('from NightingaleORM.dbmodel import Model'+'\n')
+        f.write('from NightingaleORM.dbmodel import Model' + '\n')
         f.write(
-            'from NightingaleORM.fields import StringField,IntegerField,DateTimeField,FloatField'+'\n')
-        f.write('import datetime'+'\n')
+            'from NightingaleORM.fields import StringField,IntegerField,DateTimeField,FloatField'
+            + '\n')
+        f.write('import datetime' + '\n')
         f.write('\n')
         ModelName = ModelName[:1].upper() + ModelName[1:]
-        f.write(f'class {ModelName}Model(Model):'+'\n')
-        f.write(f"    __dbType__='pgsql'"+'\n')
-        f.write(f"    __dateBase__='{dbBaseName}'"+'\n')
-        f.write(f"    __schema__='{schemasName}'"+'\n')
-        f.write(f"    __table__='{tableName}'"+'\n')
+        f.write(f'class {ModelName}Model(Model):' + '\n')
+        f.write(f"    __dbType__='pgsql'" + '\n')
+        f.write(f"    __dateBase__='{dbBaseName}'" + '\n')
+        f.write(f"    __schema__='{schemasName}'" + '\n')
+        f.write(f"    __table__='{tableName}'" + '\n')
         f.write('\n')
-        f.write(f"    def __init__(self,**kwargs):"+'\n')
-        f.write(
-            f"          super({ModelName}Model,self).__init__(**kwargs)"+'\n')
+        f.write(f"    def __init__(self,**kwargs):" + '\n')
+        f.write(f"          super({ModelName}Model,self).__init__(**kwargs)" +
+                '\n')
         f.write('\n')
         for item in tableInfo:
             item = dict(item)
@@ -128,7 +130,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
             if len(valNameArray) > 1:
                 valName = ""
                 for nameItem in valNameArray:
-                    valName = valName+(nameItem[:1].upper() + nameItem[1:])
+                    valName = valName + (nameItem[:1].upper() + nameItem[1:])
                 valName = valName[:1].lower() + valName[1:]
             f.write(f"{valName}")
             typeStr = ''
@@ -139,7 +141,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                 typeStr = 'StringField'
             elif 'timestamp' in dbType:
                 typeStr = 'DateTimeField'
-            elif 'float' in dbType or 'decimal'in dbType:
+            elif 'float' in dbType or 'decimal' in dbType:
                 typeStr = 'DateTimeField'
             f.write(f" = {typeStr}('{item['name']}',")
             if 'regclass' in item['default']:
@@ -148,14 +150,16 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                 f.write(f" False,")
                 defaultArray = item['default'].split("::")
                 if 'timestamp' in dbType:
-                    if 'createtime' in item['name'] or 'updatetime' in item['name']:
+                    if 'createtime' in item['name'] or 'updatetime' in item[
+                            'name']:
                         f.write(f" datetime.datetime.now()")
                     else:
                         f.write(
-                            f" datetime.datetime.strptime({defaultArray[0]}, '%Y-%m-%d %H:%M:%S')")
+                            f" datetime.datetime.strptime({defaultArray[0]}, '%Y-%m-%d %H:%M:%S')"
+                        )
                 else:
-                    f.write(f" {defaultArray[0]}",)
-            f.write(f") #{item['comment']}"+'\n')
+                    f.write(f" {defaultArray[0]}", )
+            f.write(f") # {item['comment']}" + '\n')
 
         f.write('\n')
         f.write('    """\n')
@@ -165,7 +169,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
         f.write('    async with dal: #建立链接\n')
         f.write('\n')
         ModelName2 = ModelName[:1].lower() + ModelName[1:]
-        f.write(f"    {ModelName2}DAL={ModelName}Model()"+'\n')
+        f.write(f"    {ModelName2}DAL={ModelName}Model()" + '\n')
         for item in tableInfo:
             item = dict(item)
             valName = item['name']
@@ -176,10 +180,11 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
             if len(valNameArray) > 1:
                 valName = ""
                 for nameItem in valNameArray:
-                    valName = valName+(nameItem[:1].upper() + nameItem[1:])
+                    valName = valName + (nameItem[:1].upper() + nameItem[1:])
                 valName = valName[:1].lower() + valName[1:]
             f.write(
-                f"    {ModelName2}DAL.addShow({ModelName}Model.{valName}) #{item['comment']}"+'\n')
+                f"    {ModelName2}DAL.addShow({ModelName}Model.{valName}) # {item['comment']}"
+                + '\n')
         f.write('\n')
         for item in tableInfo:
             item = dict(item)
@@ -191,10 +196,11 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
             if len(valNameArray) > 1:
                 valName = ""
                 for nameItem in valNameArray:
-                    valName = valName+(nameItem[:1].upper() + nameItem[1:])
+                    valName = valName + (nameItem[:1].upper() + nameItem[1:])
                 valName = valName[:1].lower() + valName[1:]
             f.write(
-                f"    {ModelName2}DAL.addWhere({ModelName}Model.{valName}==kwargs['{item['name']}']) #{item['comment']}"+'\n')
+                f"    {ModelName2}DAL.addWhere({ModelName}Model.{valName}==kwargs['{item['name']}']) # {item['comment']}"
+                + '\n')
         f.write('\n')
         for item in tableInfo:
             item = dict(item)
@@ -206,10 +212,11 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
             if len(valNameArray) > 1:
                 valName = ""
                 for nameItem in valNameArray:
-                    valName = valName+(nameItem[:1].upper() + nameItem[1:])
+                    valName = valName + (nameItem[:1].upper() + nameItem[1:])
                 valName = valName[:1].lower() + valName[1:]
             f.write(
-                f"    {ModelName2}DAL.addUpdate({ModelName}Model.{valName}==kwargs['{item['name']}']) #{item['comment']}"+'\n')
+                f"    {ModelName2}DAL.addUpdate({ModelName}Model.{valName}==kwargs['{item['name']}']) # {item['comment']}"
+                + '\n')
         f.write('\n')
         f.write(f'    dal.getList({ModelName2}DAL)#查询\n')
         f.write(f'    dal.update({ModelName2}DAL)#更新\n')
@@ -223,7 +230,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
         print("执行完毕")
         return
 
-    dirPathFastSql = f"../app/DataAccess/{dbBaseName}"
+    dirPathFastSql = f"../app/dataAccess/{dbBaseName}"
     print(f"是否输出默认目录{dirPathFastSql} \n")
     isCurDir = input(f" y（开始生成）/n（重新输入路径）\n")
 
@@ -246,15 +253,19 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
 
     modelNameBefore = ModelName[:1].upper() + ModelName[1:]
     with open(projectAccessName, 'w') as f:
-        f.write('from utils import unity'+'\n')
-        f.write('from app.dataAccess import DAL'+'\n')
-        dirPathww=dirPath.replace('.',"")
-        dirPathww=dirPathww.replace('/',".")
-        if  len(dirPathww)>0:
-            dirPathww+='.'
+        f.write('from utils import unity' + '\n')
+        f.write('from app.dataAccess import DAL' + '\n')
+        dirPathww = dirPath.replace('.', "")
+        dirPathww = dirPathww.replace('/', ".")
+        if len(dirPathww) > 0:
+            if dirPathww[len(dirPathww) - 1] != '.':
+                dirPathww += '.'
+            if dirPathww[0] == '.':
+                dirPathww = dirPathww[1:]
         f.write(
-            f'from {dirPathww}{ModelName[:1].lower() + ModelName[1:]}Model import {modelNameBefore}Model'+'\n')
-        f.write('import datetime'+'\n')
+            f'from {dirPathww}{ModelName[:1].lower() + ModelName[1:]}Model import {modelNameBefore}Model'
+            + '\n')
+        f.write('import datetime' + '\n')
         f.write('\n')
 
         f.write(f'async def add(model:{modelNameBefore}Model):\n')
@@ -273,8 +284,8 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
         f.write(f'  新增数据，并返回主键Id\n')
         f.write(f'  """\n')
         f.write(f'  \n')
-        f.write(f'  if model is none: \n')
-        f.write(f'     return false\n')
+        f.write(f'  if model is None: \n')
+        f.write(f'     return False\n')
         f.write(f'  dal = DAL( {modelNameBefore}Model)  # 初始化\n')
         f.write(f'  async with dal:  # 建立链接\n')
         f.write(f'     return  dal.addReturnId(model)\n')
@@ -294,10 +305,11 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
             if len(valNameArray) > 1:
                 valName = ""
                 for nameItem in valNameArray:
-                    valName = valName+(nameItem[:1].upper() + nameItem[1:])
+                    valName = valName + (nameItem[:1].upper() + nameItem[1:])
                 valName = valName[:1].lower() + valName[1:]
             f.write(
-                f"  model.addShow({ModelName}Model.{valName}) #{item['comment']}"+'\n')
+                f"  model.addShow({ModelName}Model.{valName}) # {item['comment']}"
+                + '\n')
             f.write('\n')
         f.write('\n')
         for item in tableInfo:
@@ -311,25 +323,36 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
             if len(valNameArray) > 1:
                 valName = ""
                 for nameItem in valNameArray:
-                    valName = valName+(nameItem[:1].upper() + nameItem[1:])
+                    valName = valName + (nameItem[:1].upper() + nameItem[1:])
                 valName = valName[:1].lower() + valName[1:]
             dbType = item['type'].lower()
-            if 'int' in dbType or 'float' in dbType or 'decimal'in dbType:
-                f.write(f"  if unity.tryGetValueOfInt(kwargs,'{valName}')>0:"+'\n')
-                f.write(  f"    model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}'))#{item['comment']}"+'\n')
+            if 'int' in dbType or 'float' in dbType or 'decimal' in dbType:
+                f.write(f"  if unity.tryGetValueOfInt(kwargs,'{valName}')>0:" +
+                        '\n')
+                f.write(
+                    f"    model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}'))# {item['comment']}"
+                    + '\n')
             elif 'timestamp' in dbType:
-                f.write(f"  if 'valName' in kwargs:"+'\n')
-                f.write(  f"    model.addWhere({ModelName}Model.{valName}==kwargs['{valName}'])#{item['comment']}"+'\n')
-            else :
-                f.write(f"  if unity.isNoneOrEmpty(unity.tryGetValue(kwargs,'{valName}')):"+'\n')
-                f.write(  f"   model.addWhere({ModelName}Model.{valName}==unity.tryGetValue(kwargs,'{valName}')) #{item['comment']}"+'\n')
+                f.write(f"  if 'valName' in kwargs:" + '\n')
+                f.write(
+                    f"    model.addWhere({ModelName}Model.{valName}==kwargs['{valName}'])# {item['comment']}"
+                    + '\n')
+            else:
+                f.write(
+                    f"  if unity.isNoneOrEmpty(unity.tryGetValue(kwargs,'{valName}')):"
+                    + '\n')
+                f.write(
+                    f"   model.addWhere({ModelName}Model.{valName}==unity.tryGetValue(kwargs,'{valName}')) # {item['comment']}"
+                    + '\n')
             f.write('\n')
         f.write('\n')
 
         f.write(f' \n')
         f.write(f'  dal = DAL( {modelNameBefore}Model)  # 初始化\n')
         f.write(f'  async with dal:  # 建立链接\n')
-        f.write(f"     return  dal.getList(model,unity.tryGetValueOfInt('kwargs','page',0),unity.tryGetValueOfInt('kwargs','index',0))\n")
+        f.write(
+            f"     return  dal.getList(model,unity.tryGetValueOfInt('kwargs','page',0),unity.tryGetValueOfInt('kwargs','index',0))\n"
+        )
         f.write('\n')
         f.write('\n')
         f.write(f'async def update(**kwargs):\n')
@@ -343,25 +366,34 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
             item = dict(item)
             valName = item['name']
             # realName=valName
-            if 'dropped.' in valName or   'regclass' in item['default']:
+            if 'dropped.' in valName or 'regclass' in item['default']:
                 continue
             # f.write(f"    ")
             valNameArray = valName.split('_')
             if len(valNameArray) > 1:
                 valName = ""
                 for nameItem in valNameArray:
-                    valName = valName+(nameItem[:1].upper() + nameItem[1:])
+                    valName = valName + (nameItem[:1].upper() + nameItem[1:])
                 valName = valName[:1].lower() + valName[1:]
             dbType = item['type'].lower()
-            if 'int' in dbType or 'float' in dbType or 'decimal'in dbType:
-                f.write(f"  if unity.tryGetValueOfInt(kwargs,'{valName}')>0:"+'\n')
-                f.write(  f"    model.addUpdate({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}') )#{item['comment']}"+'\n')
+            if 'int' in dbType or 'float' in dbType or 'decimal' in dbType:
+                f.write(f"  if unity.tryGetValueOfInt(kwargs,'{valName}')>0:" +
+                        '\n')
+                f.write(
+                    f"    model.addUpdate({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}') )# {item['comment']}"
+                    + '\n')
             elif 'timestamp' in dbType:
-                f.write(f"  if 'valName' in kwargs:"+'\n')
-                f.write(  f"    model.addUpdate({ModelName}Model.{valName}==kwargs['{valName}'])#{item['comment']}"+'\n')
-            else :
-                f.write(f"  if unity.isNoneOrEmpty(unity.tryGetValue(kwargs,'{valName}')):"+'\n')
-                f.write(  f"    model.addUpdate({ModelName}Model.{valName}==unity.tryGetValue(kwargs,'{valName}')) #{item['comment']}"+'\n')
+                f.write(f"  if 'valName' in kwargs:" + '\n')
+                f.write(
+                    f"    model.addUpdate({ModelName}Model.{valName}==kwargs['{valName}'])# {item['comment']}"
+                    + '\n')
+            else:
+                f.write(
+                    f"  if unity.isNoneOrEmpty(unity.tryGetValue(kwargs,'{valName}')):"
+                    + '\n')
+                f.write(
+                    f"    model.addUpdate({ModelName}Model.{valName}==unity.tryGetValue(kwargs,'{valName}')) # {item['comment']}"
+                    + '\n')
             f.write('\n')
 
         for item in tableInfo:
@@ -375,18 +407,19 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
             if len(valNameArray) > 1:
                 valName = ""
                 for nameItem in valNameArray:
-                    valName = valName+(nameItem[:1].upper() + nameItem[1:])
+                    valName = valName + (nameItem[:1].upper() + nameItem[1:])
                 valName = valName[:1].lower() + valName[1:]
             if 'regclass' in item['default']:
-                 f.write(  f"  model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}')) #{item['comment']}"+'\n')
-                 break
-       
-        f.write('\n')
+                f.write(
+                    f"  model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}')) # {item['comment']}"
+                    + '\n')
+                break
 
+        f.write('\n')
 
         f.write(f'  dal = DAL( {modelNameBefore}Model)  # 初始化\n')
         f.write(f'  async with dal:  # 建立链接\n')
-        f.write(f'     return  dal.addReturnId(model)\n')
+        f.write(f'     return  dal.update(model)\n')
 
     print(f"数据库快捷sql{projectAccessName}生成完成...\n")
 
