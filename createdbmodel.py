@@ -277,7 +277,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
         f.write(f'     return False\n')
         f.write(f'  dal = DAL( {modelNameBefore}Model)  # 初始化\n')
         f.write(f'  async with dal:  # 建立链接\n')
-        f.write(f'     return  dal.add(model)\n')
+        f.write(f'     return await dal.add(model)\n')
 
         f.write(f'async def addReturnId(model:{modelNameBefore}Model):\n')
         f.write(f'  """\n')
@@ -288,7 +288,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
         f.write(f'     return False\n')
         f.write(f'  dal = DAL( {modelNameBefore}Model)  # 初始化\n')
         f.write(f'  async with dal:  # 建立链接\n')
-        f.write(f'     return  dal.addReturnId(model)\n')
+        f.write(f'     return await dal.addReturnId(model)\n')
 
         f.write(f'async def getList(**kwargs):\n')
         f.write(f'  """\n')
@@ -351,7 +351,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
         f.write(f'  dal = DAL( {modelNameBefore}Model)  # 初始化\n')
         f.write(f'  async with dal:  # 建立链接\n')
         f.write(
-            f"     return  dal.getList(model,unity.tryGetValueOfInt('kwargs','page',0),unity.tryGetValueOfInt('kwargs','index',0))\n"
+            f"     return await dal.getList(model,unity.tryGetValueOfInt('kwargs','page',0),unity.tryGetValueOfInt('kwargs','index',0))\n"
         )
         f.write('\n')
         f.write('\n')
@@ -419,7 +419,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
 
         f.write(f'  dal = DAL( {modelNameBefore}Model)  # 初始化\n')
         f.write(f'  async with dal:  # 建立链接\n')
-        f.write(f'     return  dal.update(model)\n')
+        f.write(f'     return  await dal.update(model)\n')
 
     print(f"数据库快捷sql{projectAccessName}生成完成...\n")
 
