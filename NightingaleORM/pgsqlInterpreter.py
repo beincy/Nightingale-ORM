@@ -2,7 +2,18 @@ from NightingaleORM.fields import Field
 import json
 
 
-def translateSelect(database, schema, table, alias, shows, joins, wheres, brackets, orders, pk, count=1, offset=0):
+def translateSelect(database,
+                    schema,
+                    table,
+                    alias,
+                    shows,
+                    joins,
+                    wheres,
+                    brackets,
+                    orders,
+                    pk,
+                    count=1,
+                    offset=0):
     if database is None or schema is None or table is None:
         raise 'interpreter cannot find the db or table'
     sqlStr = ''
@@ -20,7 +31,8 @@ FROM {database}{schemaStr}."{table}" {alias}'''
     # join
     sqlStr = f'''{sqlStr} {translateJoin(joins,parameters)}'''
     # where
-    if (wheres is None or len(wheres) <= 0) and (brackets is None or len(brackets) <= 0):
+    if (wheres is None or len(wheres) <= 0) and (brackets is None
+                                                 or len(brackets) <= 0):
         raise 'where fields cannot be empty'
 
     sqlStr = f'''{sqlStr} 
@@ -33,12 +45,13 @@ WHERE 1=1{translateWhere(alias,wheres,parameters)}'''
     # order
     sqlStr = f'''{sqlStr} {translateOrder(orders,pk,alias)}'''
     # limit
-    if count>0:
+    if count > 0:
         sqlStr = f'''{sqlStr} 
 LIMIT {count}'''
-    if offset>0:
+    if offset > 0:
         sqlStr = f'''{sqlStr}  OFFSET {offset}'''
-    return (sqlStrTop+sqlStr, parameters, sqlStrCountTop)
+    return (sqlStrTop + sqlStr, parameters, sqlStrCountTop)
+
 
 # 添加where条件
 
@@ -97,24 +110,24 @@ def translateJoin(joins, parameters):
                     joinSchemaStr = ''
                     joinTable = ''
                     if all([onList[0], onList[0].fields]):
-                        joinSchemaStr=f'.{onList[0].fields.__schema__}' if onList[0].fields.__schema__ else ''
+                        joinSchemaStr = f'.{onList[0].fields.__schema__}' if onList[
+                            0].fields.__schema__ else ''
                         joinTable = f'''{onList[0].fields.__dateBase__}{joinSchemaStr}."{onList[0].fields.__table__}" '''
                     sqlStr = f'''{sqlStr} 
 {joinfield.joinType} {joinTable} ON'''
-                    isFirst=True
+                    isFirst = True
                     for eachOn in onList:
                         if isinstance(eachOn, str):
                             sqlStr = f'''{sqlStr} {eachOn}'''
                         else:
-                            if isinstance(eachOn.value, str):
+                            if not issubclass(type(eachOn.value), Field):
                                 parameters.append(eachOn.value)
-                            else:
-                                sqlStr = f'''{sqlStr} {'' if isFirst else eachOn.relation} {eachOn.fields.name} {eachOn.operation} {f'${len(parameters)}' if isinstance(eachOn.value,str) else eachOn.value.name}'''
-                        isFirst=False
+                            sqlStr = f'''{sqlStr} {'' if isFirst else eachOn.relation} {eachOn.fields.name} {eachOn.operation} {f'${len(parameters)}'  if not issubclass(type(eachOn.value),Field) else eachOn.value.name}'''
+                        isFirst = False
     return sqlStr
 
 
-def translateOrder(orders, pk,alias):
+def translateOrder(orders, pk, alias):
     sqlStr = ''
     if orders and len(orders) > 0:
         sqlStr = f'''
@@ -164,6 +177,7 @@ def translateInsert(database, schema, table, mapDict, valueDict):
 VALUES ({','.join(values)})'''
     return insertStr, parameters
 
+
 def translateUpdateModel(database, schema, table, mapDict, valueDict):
     '''
     get the sql of UPDATE
@@ -179,68 +193,69 @@ def translateUpdateModel(database, schema, table, mapDict, valueDict):
     updateStr = f'''UPDATE {database}{schemaStr}."{table}"'''  # 执行的sql
     parameters = []  # 参数化的参数
     fields = []  # 字段名称
-    where = () # where条件
+    where = ()  # where条件
     for k, v in mapDict.items():
         if v.primary_key:
-            if k not in valueDict  :
+            if k not in valueDict:
                 raise 'primary_key not valid'
-            if  isinstance(valueDict.get(k),int) and valueDict.get(k)<=0:
+            if isinstance(valueDict.get(k), int) and valueDict.get(k) <= 0:
                 raise 'primary_key not valid'
-            where=(v.name,valueDict.get(k))
+            where = (v.name, valueDict.get(k))
             continue
-        if  k in valueDict:
+        if k in valueDict:
             parameters.append(valueDict.get(k))
             fields.append(v.name)
-        elif v.default is  not None:
+        elif v.default is not None:
             parameters.append(v.default)
             fields.append(v.name)
     if len(parameters) < 0:
-         raise 'Update cannot find '
-    if len(where)!=2:
-         raise 'model not primary_key'
+        raise 'Update cannot find '
+    if len(where) != 2:
+        raise 'model not primary_key'
     updateStr = f'''{updateStr} 
 SET'''
-    for index,field in enumerate(fields):
+    for index, field in enumerate(fields):
         updateStr = f'''{updateStr} {field}=${index+1},'''
-    
-    updateStr = updateStr.strip(',')#去除最后一个空格
+
+    updateStr = updateStr.strip(',')  #去除最后一个空格
 
     #拼接 where条件
     parameters.append(where[1])
     updateStr = f'''{updateStr} 
 WHERE {where[0]}=${len(parameters)}'''
-    return updateStr,parameters
+    return updateStr, parameters
 
-def translateUpdate(database, schema, table, updates,wheres, brackets):
+
+def translateUpdate(database, schema, table, updates, wheres, brackets):
     '''
     get the update sql 
     '''
     if database is None or schema is None or table is None:
         raise 'interpreter cannot find the db or table'
-    if len(updates)<=0:
-        raise 'updates must be any' 
-    if len(wheres)<=0:
-        raise 'wheres must be any' 
+    if len(updates) <= 0:
+        raise 'updates must be any'
+    if len(wheres) <= 0:
+        raise 'wheres must be any'
     schemaStr = '' if len(schema) <= 0 else f'.{schema}'
     sqlStr = f'''UPDATE {database}{schemaStr}."{table}"'''
     parameters = []
-    sqlStr=f'''{sqlStr}
+    sqlStr = f'''{sqlStr}
 {translateSet(updates,parameters)}
 WHERE 1=1{translateWhere('',wheres,parameters)}'''
     for bracketItem in brackets:
         sqlStr = f'''{sqlStr} {bracketItem.relation} (1=1 {translateWhere('',bracketItem.whereList,parameters)})'''
-    return sqlStr,parameters
+    return sqlStr, parameters
 
-def translateSet(updates,parameters):
+
+def translateSet(updates, parameters):
     sqlStr = ''
-    if  updates and len(updates)>0:
+    if updates and len(updates) > 0:
         sqlStr = f'''SET '''
         for eachUpdate in updates:
             if isinstance(eachUpdate, str):
-                sqlStr=f'''{sqlStr}{eachUpdate},'''
-            else:  
+                sqlStr = f'''{sqlStr}{eachUpdate},'''
+            else:
                 parameters.append(eachUpdate.value)
                 sqlStr = f'''{sqlStr}{eachUpdate.fields.name} = ${len(parameters)},'''
     sqlStr = sqlStr.strip(',')
     return sqlStr
-    
