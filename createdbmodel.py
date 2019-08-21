@@ -411,7 +411,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                 valName = valName[:1].lower() + valName[1:]
             if 'regclass' in item['default']:
                 f.write(
-                    f"  model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}')) # {item['comment']}"
+                    f"  model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt(kwargs,'{valName}')) # {item['comment']}"
                     + '\n')
                 break
 
