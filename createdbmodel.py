@@ -330,7 +330,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                 f.write(f"  if unity.tryGetValueOfInt(kwargs,'{valName}')>0:" +
                         '\n')
                 f.write(
-                    f"    model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}'))# {item['comment']}"
+                    f"    model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt(kwargs,'{valName}'))# {item['comment']}"
                     + '\n')
             elif 'timestamp' in dbType:
                 f.write(f"  if '{valName}' in kwargs:" + '\n')
@@ -351,7 +351,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
         f.write(f'  dal = DAL( {modelNameBefore}Model)  # 初始化\n')
         f.write(f'  async with dal:  # 建立链接\n')
         f.write(
-            f"     return await dal.getList(model,unity.tryGetValueOfInt('kwargs','page',0),unity.tryGetValueOfInt('kwargs','index',0))\n"
+            f"     return await dal.getList(model,unity.tryGetValueOfInt(kwargs,'page',0),unity.tryGetValueOfInt(kwargs,'index',0))\n"
         )
         f.write('\n')
         f.write('\n')
@@ -380,7 +380,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                 f.write(f"  if unity.tryGetValueOfInt(kwargs,'{valName}')>0:" +
                         '\n')
                 f.write(
-                    f"    model.addUpdate({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}') )# {item['comment']}"
+                    f"    model.addUpdate({ModelName}Model.{valName}==unity.tryGetValueOfInt(kwargs,'{valName}') )# {item['comment']}"
                     + '\n')
             elif 'timestamp' in dbType:
                 f.write(f"  if '{valName}' in kwargs:" + '\n')
