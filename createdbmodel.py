@@ -333,7 +333,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                     f"    model.addWhere({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}'))# {item['comment']}"
                     + '\n')
             elif 'timestamp' in dbType:
-                f.write(f"  if 'valName' in kwargs:" + '\n')
+                f.write(f"  if '{valName}' in kwargs:" + '\n')
                 f.write(
                     f"    model.addWhere({ModelName}Model.{valName}==kwargs['{valName}'])# {item['comment']}"
                     + '\n')
@@ -383,7 +383,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
                     f"    model.addUpdate({ModelName}Model.{valName}==unity.tryGetValueOfInt('kwargs','{valName}') )# {item['comment']}"
                     + '\n')
             elif 'timestamp' in dbType:
-                f.write(f"  if 'valName' in kwargs:" + '\n')
+                f.write(f"  if '{valName}' in kwargs:" + '\n')
                 f.write(
                     f"    model.addUpdate({ModelName}Model.{valName}==kwargs['{valName}'])# {item['comment']}"
                     + '\n')
