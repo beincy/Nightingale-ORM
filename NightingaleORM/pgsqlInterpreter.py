@@ -259,3 +259,15 @@ def translateSet(updates, parameters):
                 sqlStr = f'''{sqlStr}{eachUpdate.fields.name} = ${len(parameters)},'''
     sqlStr = sqlStr.strip(',')
     return sqlStr
+
+
+def translateTransaction(*sqls):
+    """
+    使用事务
+    sqls:sql的集合
+    """
+    finalSql = 'BEGIN;'
+    for sql in sqls:
+        finalSql = f'''{finalSql}\n{sql}'''
+    finalSql = f'''{finalSql}\nCOMMIT;'''
+    return finalSql

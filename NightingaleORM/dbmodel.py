@@ -131,7 +131,7 @@ class Model(dict, metaclass=ModelMetaClass):
         self.__bracketsWhereFields__ = []
         self.__Joins__ = []
         self.__alias__ = ''
-        self._interpreter = None  #sql翻译器
+        self._interpreter = None  # sql翻译器
         super(Model, self).__init__(**kw)
         for k in self.__mappings__:
             field = self.__mappings__[k]
@@ -168,7 +168,7 @@ class Model(dict, metaclass=ModelMetaClass):
     __Joins__ = []
     __alias__ = ''
 
-    _interpreter = None  #sql翻译器
+    _interpreter = None  # sql翻译器
 
     def addBracketsWhere(self, bracket: BracketModel):
         '''
@@ -267,7 +267,7 @@ class Model(dict, metaclass=ModelMetaClass):
     def loadInterpreter(self, customModule):
         '''
         添加翻译其，默认自动识别，可手动传入，进行覆盖。不传递则自动识别
-        add Interpreter ，default pgsql 
+        add Interpreter ，default,pgsql
         '''
         self._interpreter = customModule
 
@@ -305,19 +305,6 @@ class Model(dict, metaclass=ModelMetaClass):
             self.__bracketsWhereFields__, self.__orderFields__, self.__pk__,
             pageSize, (index - 1) * pageSize)
         # 这里是获取总数的sql
-        # item2=myInterpreter.translateSelect(
-        #         self.__dateBase__,
-        #         self.__schema__,
-        #         self.__table__,
-        #         self.__alias__,
-        #         ['coungt(1)'],
-        #         self.__Joins__,
-        #         self.__whereFields__,
-        #         self.__bracketsWhereFields__,
-        #         self.__orderFields__,
-        #         self.__pk__,
-        #         pageSize,
-        #         (index-1)*pageSize)
 
         return item
 
@@ -367,3 +354,14 @@ class Model(dict, metaclass=ModelMetaClass):
                                              self.__whereFields__,
                                              self.__bracketsWhereFields__)
         return item
+
+
+def useTransaction(*sqls, interpreter=None):
+    """
+    使用事务
+    sqls:sql的集合
+    interpreter:执行的方法
+    """
+    if interpreter is None:
+        import NightingaleORM.pgsqlInterpreter as interpreter
+    return interpreter.translateTransaction(*sqls)
