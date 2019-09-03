@@ -1,6 +1,5 @@
-
 from NightingaleORM import dbmodel
-import re,datetime
+import re, datetime
 
 
 class Field:
@@ -38,7 +37,7 @@ class Field:
         '''
         if value is None:
             return feild.default
-        if isinstance(feild,StringField):
+        if isinstance(feild, StringField):
             if not isinstance(value, str):
                 return feild.default
             containList = re.findall(r'[^()]+', feild.column_type)
@@ -50,24 +49,25 @@ class Field:
                     return value[:size]
                 return value
             return value
-        elif isinstance(feild,IntegerField):
+        elif isinstance(feild, IntegerField):
             if not isinstance(value, int):
                 return feild.default
             if 'int' in feild.column_type:
-                if not (-2147483648 < value <2147483647 ):
+                if not (-2147483648 < value < 2147483647):
                     return feild.default
             return value
-        elif isinstance(feild,FloatField):
+        elif isinstance(feild, FloatField):
             if not isinstance(value, float):
                 return feild.default
             return value
-        elif isinstance(feild,DateTimeField):
+        elif isinstance(feild, DateTimeField):
             if isinstance(value, datetime.datetime):
-                return value 
-            if isinstance(value,str):
+                return value
+            if isinstance(value, str):
                 try:
-                    return datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-                except :
+                    return datetime.datetime.strptime(value,
+                                                      '%Y-%m-%d %H:%M:%S')
+                except:
                     pass
             return feild.default
 
@@ -75,20 +75,33 @@ class Field:
 
 
 class StringField(Field):
-    def __init__(self, name=None, primary_key=False, default=None, ddl='varchar(128)'):
+    def __init__(self,
+                 name=None,
+                 primary_key=False,
+                 default=None,
+                 ddl='varchar(128)'):
         super(StringField, self).__init__(name, ddl, primary_key, default)
 
 
 class IntegerField(Field):
-    def __init__(self, name=None, primary_key=False, default=None, ddl='bigint'):
+    def __init__(self,
+                 name=None,
+                 primary_key=False,
+                 default=None,
+                 ddl='bigint'):
         super(IntegerField, self).__init__(name, ddl, primary_key, default)
 
 
 class FloatField(Field):
-    def __init__(self, name=None, primary_key=False, default=None, ddl='float'):
+    def __init__(self, name=None, primary_key=False, default=None,
+                 ddl='float'):
         super(FloatField, self).__init__(name, ddl, primary_key, default)
 
 
 class DateTimeField(Field):
-    def __init__(self, name=None, primary_key=False, default=None, ddl='datetime)'):
+    def __init__(self,
+                 name=None,
+                 primary_key=False,
+                 default=None,
+                 ddl='datetime)'):
         super(DateTimeField, self).__init__(name, ddl, primary_key, default)

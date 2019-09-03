@@ -1,6 +1,7 @@
 from NightingaleORM.fields import Field
 import datetime
 
+
 class ModelMetaClass(type):
     def __new__(cls, name, bases, attrs):
         if name == "Model":
@@ -18,13 +19,14 @@ class ModelMetaClass(type):
         for k, v in attrs.items():
             if isinstance(v, Field):
                 mappings[k] = v
-                mappings[k].__dateBase__=dateBaseName
-                mappings[k].__schema__=schemaName
-                mappings[k].__table__=tableName
+                mappings[k].__dateBase__ = dateBaseName
+                mappings[k].__schema__ = schemaName
+                mappings[k].__table__ = tableName
                 if v.primary_key:
                     if primaryKey:
                         raise RuntimeError(
-                            "Douplicate primary key for field :%s" % primaryKey)
+                            "Douplicate primary key for field :%s" %
+                            primaryKey)
                     primaryKey = k
                 else:
                     fields.append(k)
@@ -40,36 +42,39 @@ class ModelMetaClass(type):
         attrs['__pk__'] = mappings[primaryKey]  # 保存数据库类型
         return type.__new__(cls, name, bases, attrs)
 
+
 class BracketModel:
     '''
     括号整体类，括号的条件会关联在一起
     '''
+
     # whereList=[]
     # relation='AND'
-    def __init__(self,model,relation):
-        self.whereList=[]
-        self.relation='AND'
-        self.orginModel=model
-        self.BracketModel=relation
+    def __init__(self, model, relation):
+        self.whereList = []
+        self.relation = 'AND'
+        self.orginModel = model
+        self.BracketModel = relation
 
-    def addWhere(self,operation,relation='AND'):
+    def addWhere(self, operation, relation='AND'):
         '''
         添加where条件
         operation:class ConditionModel or tuple like ('id','>',1)
         relation:'and' or 'or'
         '''
-        if isinstance(operation,ConditionModel):
-            operation.relation=relation
+        if isinstance(operation, ConditionModel):
+            operation.relation = relation
             self.whereList.append(operation)
-        elif isinstance(operation,tuple) and len(operation)==3:
-            con=ConditionModel(*operation)
-            con.relation=relation
+        elif isinstance(operation, tuple) and len(operation) == 3:
+            con = ConditionModel(*operation)
+            con.relation = relation
             self.whereList.append(con)
         return self
-    
+
     def endBracket(self):
         self.orginModel.addBracketsWhere(self)
         return self.orginModel
+
 
 class ConditionModel:
     # fields='' #字段
@@ -77,50 +82,57 @@ class ConditionModel:
     # value='' #值
     # _relation='' #与前一个条件的关系
 
-    def __init__(self,fields,operation,value):
-        self.fields='' #字段
-        self.operation='=' #操作符
-        self.value='' #值
-        self._relation='' #与前一个条件的关系
-        self.fields,self.operation,self.value=fields,operation.upper(),value 
+    def __init__(self, fields, operation, value):
+        self.fields = ''  #字段
+        self.operation = '='  #操作符
+        self.value = ''  #值
+        self._relation = ''  #与前一个条件的关系
+        self.fields, self.operation, self.value = fields, operation.upper(
+        ), value
+
     @property
-    def relation(self): 
+    def relation(self):
         return self._relation
+
     @relation.setter
-    def relation(self,value):
-        if isinstance(value,str):
-            self._relation= value.upper()
+    def relation(self, value):
+        if isinstance(value, str):
+            self._relation = value.upper()
+
 
 class JoinConditionModel():
-        # joinType=''#the type of  join 
-        # onList=[] # the condition affter on 
-        def __init__(self,joinType):
-            self.joinType=''#the type of  join 
-            self.onList=[] # the condition affter on 
-            self.joinType=joinType.upper()
+    # joinType=''#the type of  join
+    # onList=[] # the condition affter on
+    def __init__(self, joinType):
+        self.joinType = ''  #the type of  join
+        self.onList = []  # the condition affter on
+        self.joinType = joinType.upper()
 
-        def addOn(self,condition,relation):
-            condition.relation=relation
-            self.onList.append(condition)
+    def addOn(self, condition, relation):
+        condition.relation = relation
+        self.onList.append(condition)
+
 
 class OrderMOdel:
     # field=''
     # orderType='ASC'
-    def __init__(self,field,orderType):
-        self.field=''
-        self.orderType='ASC'
-        self.field,self.orderType=field,orderType
+    def __init__(self, field, orderType):
+        self.field = ''
+        self.orderType = 'ASC'
+        self.field, self.orderType = field, orderType
+
 
 class Model(dict, metaclass=ModelMetaClass):
     def __init__(self, **kw):
-        self.__showFields__=[]
-        self.__orderFields__=[]
-        self.__whereFields__=[]
-        self.__updateFields__=[]
-        self.__bracketsWhereFields__=[]
-        self.__Joins__=[]
-        self.__alias__=''
-        self._interpreter=None#sql翻译器
+        self.__showFields__ = []
+        self.__orderFields__ = []
+        self.__whereFields__ = []
+        self.__updateFields__ = []
+        self.__groupByFields__ = []
+        self.__bracketsWhereFields__ = []
+        self.__Joins__ = []
+        self.__alias__ = ''
+        self._interpreter = None  # sql翻译器
         super(Model, self).__init__(**kw)
         for k in self.__mappings__:
             field = self.__mappings__[k]
@@ -136,251 +148,229 @@ class Model(dict, metaclass=ModelMetaClass):
 
     def __getattribute__(self, key):
         try:
-            if key  in object.__getattribute__(self, '__mappings__') :
+            if key in object.__getattribute__(self, '__mappings__'):
                 return self[key]
             return object.__getattribute__(self, key)
         except KeyError:
             raise AttributeError(r"'Model' object has no attribute '%s'" % key)
 
     def __setattr__(self, key, value):
-        if key in  self.__mappings__:
-            self[key]=Field.fieldTest(self.__mappings__[key],value)
-        elif key.find("_")==0 :
-            self.__dict__[key]=value
+        if key in self.__mappings__:
+            self[key] = Field.fieldTest(self.__mappings__[key], value)
+        elif key.find("_") == 0:
+            self.__dict__[key] = value
         # self[key] = value
 
-    __showFields__=[]
-    __orderFields__=[]
-    __whereFields__=[]
-    __updateFields__=[]
-    __bracketsWhereFields__=[]
-    __Joins__=[]
-    __alias__=''
+    # __showFields__ = []
+    # __orderFields__ = []
+    # __whereFields__ = []
+    # __updateFields__ = []
+    # __bracketsWhereFields__ = []
+    # __Joins__ = []
+    # __alias__ = ''
 
-    _interpreter=None#sql翻译器
+    # _interpreter = None  # sql翻译器
 
-    def addBracketsWhere(self,bracket:BracketModel):
+    def addBracketsWhere(self, bracket: BracketModel):
         '''
         bracket:BracketModel
         '''
-        if isinstance(bracket,BracketModel) and  len(bracket.whereList)>0:
+        if isinstance(bracket, BracketModel) and len(bracket.whereList) > 0:
             self.__bracketsWhereFields__.append(bracket)
-        
 
-    def addShow(self,*args):
+    def addShow(self, *args):
         '''
         添加查询的fields
         '''
-        self.__showFields__+=args
+        self.__showFields__ += args
         return self
-    
-    def startBrackets(self,relation='AND'):
+
+    def startBrackets(self, relation='AND'):
         '''
         开始括号 开始括号
         relation:
         '''
-        return BracketModel(self,relation)
-    
-    def addWhere(self,operation,relation='AND'):
+        return BracketModel(self, relation)
+
+    def addWhere(self, operation, relation='AND'):
         '''
         添加where条件
         operation:class ConditionModel or tuple like ('id','>',1) or string
         relation:'and' or 'or'
         '''
-        if isinstance(operation,ConditionModel):
-            operation.relation=relation
+        if isinstance(operation, ConditionModel):
+            operation.relation = relation
             self.__whereFields__.append(operation)
-        elif isinstance(operation,tuple) and len(operation)==3:
-            con=ConditionModel(*operation)
-            con.relation=relation
+        elif isinstance(operation, tuple) and len(operation) == 3:
+            con = ConditionModel(*operation)
+            con.relation = relation
             self.__whereFields__.append(con)
-        elif isinstance(operation,str):
-             self.__whereFields__.append(operation)
+        elif isinstance(operation, str):
+            self.__whereFields__.append(operation)
         return self
 
-
-    def addTableAlias(self,tableAlias):
-        self.__alias__=tableAlias
+    def addTableAlias(self, tableAlias):
+        self.__alias__ = tableAlias
         return self
 
-    def addOrder(self,field):
+    def addOrder(self, field):
         '''
         添加排序的的fields，升序
         '''
-        self.__orderFields__.append(OrderMOdel(field,'ASC'))
+        self.__orderFields__.append(OrderMOdel(field, 'ASC'))
         return self
-    
-    def addOrderDesc(self,field):
+
+    def addGroupBy(self, field):
+        """
+        添加分组字段
+        """
+        self.__groupByFields__.append(field)
+        return self
+
+    def addOrderDesc(self, field):
         '''
         添加排序字段，降序
         '''
-        self.__orderFields__.append(OrderMOdel(field,'DESC'))
+        self.__orderFields__.append(OrderMOdel(field, 'DESC'))
         return self
 
-
-    def addJoin(self,*operation,joinType='JOIN'):
+    def addJoin(self, *operation, joinType='JOIN'):
         '''
         添加Join条件
         model1 joinType model2 alias on operation
         '''
-        join=JoinConditionModel(joinType)
+        join = JoinConditionModel(joinType)
         for item in operation:
-            if isinstance(item,tuple):
-                join.addOn(item[0],item[1])
+            if isinstance(item, tuple):
+                join.addOn(item[0], item[1])
             else:
-                join.addOn(item,'AND')
-        
+                join.addOn(item, 'AND')
+
         self.__Joins__.append(join)
         return self
-    
-    def addJoinStr(self,joinStr:str):
+
+    def addJoinStr(self, joinStr: str):
         '''
         添加Join条件
         joinStr
         '''
-        if  isinstance(joinStr,str): 
+        if isinstance(joinStr, str):
             self.__Joins__.append(joinStr)
         return self
-    
-    def addUpdate(self,setCollection):
+
+    def addUpdate(self, setCollection):
         '''
         添加Update条件
         set:the ConditionModel  .only equal  valid
         '''
-        if isinstance(setCollection,ConditionModel):
+        if isinstance(setCollection, ConditionModel):
             self.__updateFields__.append(setCollection)
-        elif isinstance(setCollection,tuple) and len(setCollection)==3:
-            con=ConditionModel(*setCollection)
+        elif isinstance(setCollection, tuple) and len(setCollection) == 3:
+            con = ConditionModel(*setCollection)
             self.__updateFields__.append(con)
-        elif isinstance(setCollection,str):
-             self.__updateFields__.append(setCollection)
+        elif isinstance(setCollection, str):
+            self.__updateFields__.append(setCollection)
         return self
-
-    def loadInterpreter(self,customModule):
+    
+    def loadInterpreter(self, customModule):
         '''
         添加翻译其，默认自动识别，可手动传入，进行覆盖。不传递则自动识别
-        add Interpreter ，default pgsql 
+        add Interpreter ，default,pgsql
         '''
-        self._interpreter=customModule
+        self._interpreter = customModule
 
-    def selectSql(self,count=0)->str:
-        item=()
-        myInterpreter=None
+    def selectSql(self, count=0) -> str:
+        item = ()
+        myInterpreter = None
         if self._interpreter:
-            myInterpreter=self._interpreter
-        elif self.__dbType__.lower()=='pgsql':
+            myInterpreter = self._interpreter
+        elif self.__dbType__.lower() == 'pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
-            myInterpreter=mpgsql
-        item=myInterpreter.translateSelect(
-            self.__dateBase__,
-            self.__schema__,
-            self.__table__,
-            self.__alias__,
-            self.__showFields__,
-            self.__Joins__,
-            self.__whereFields__,
-            self.__bracketsWhereFields__,
-            self.__orderFields__,
-            self.__pk__,
-            count,
-            0)
+            myInterpreter = mpgsql
+        item = myInterpreter.translateSelect(
+            self.__dateBase__, self.__schema__, self.__table__, self.__alias__,
+            self.__showFields__, self.__Joins__, self.__whereFields__,
+            self.__bracketsWhereFields__, self.__orderFields__,
+            self.__groupByFields__, self.__pk__, count, 0)
         return item
 
-    def pageOfList(self,index,pageSize):
+    def pageOfList(self, index, pageSize):
         '''
         index:the index of pages
         pageSize:the size of each page
         '''
-        myInterpreter=None
+        myInterpreter = None
         if self._interpreter:
-             # 这里是获取实际的值
-            myInterpreter=self._interpreter
-        elif self.__dbType__.lower()=='pgsql':
+            # 这里是获取实际的值
+            myInterpreter = self._interpreter
+        elif self.__dbType__.lower() == 'pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
-            myInterpreter=mpgsql
+            myInterpreter = mpgsql
         # 这里是获取实际的值
-        item=myInterpreter.translateSelect(
-                self.__dateBase__,
-                self.__schema__,
-                self.__table__,
-                self.__alias__,
-                self.__showFields__,
-                self.__Joins__,
-                self.__whereFields__,
-                self.__bracketsWhereFields__,
-                self.__orderFields__,
-                self.__pk__,
-                pageSize,
-                (index-1)*pageSize)
+        item = myInterpreter.translateSelect(
+            self.__dateBase__, self.__schema__, self.__table__, self.__alias__,
+            self.__showFields__, self.__Joins__, self.__whereFields__,
+            self.__bracketsWhereFields__, self.__orderFields__,
+            self.__groupByFields__, self.__pk__, pageSize,
+            (index - 1) * pageSize)
         # 这里是获取总数的sql
-        # item2=myInterpreter.translateSelect(
-        #         self.__dateBase__,
-        #         self.__schema__,
-        #         self.__table__,
-        #         self.__alias__,
-        #         ['coungt(1)'],
-        #         self.__Joins__,
-        #         self.__whereFields__,
-        #         self.__bracketsWhereFields__,
-        #         self.__orderFields__,
-        #         self.__pk__,
-        #         pageSize,
-        #         (index-1)*pageSize)    
 
         return item
-    
+
     def insertSql(self):
         '''
         获取新增的的sql
         '''
-        myInterpreter=None
+        myInterpreter = None
         if self._interpreter:
-            myInterpreter=self._interpreter
-        elif self.__dbType__.lower()=='pgsql':
+            myInterpreter = self._interpreter
+        elif self.__dbType__.lower() == 'pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
-            myInterpreter=mpgsql
-        
-        item=myInterpreter.translateInsert(
-             self.__dateBase__,
-            self.__schema__,
-            self.__table__,
-            self.__mappings__,
-            self)
+            myInterpreter = mpgsql
+
+        item = myInterpreter.translateInsert(self.__dateBase__,
+                                             self.__schema__, self.__table__,
+                                             self.__mappings__, self)
         return item
 
     def updateModel(self):
         '''
         获取新增的的sql
         '''
-        myInterpreter=None
+        myInterpreter = None
         if self._interpreter:
-            myInterpreter=self._interpreter
-        elif self.__dbType__.lower()=='pgsql':
+            myInterpreter = self._interpreter
+        elif self.__dbType__.lower() == 'pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
-            myInterpreter=mpgsql
-        item=myInterpreter.translateUpdateModel(
-            self.__dateBase__,
-            self.__schema__,
-            self.__table__,
-            self.__mappings__,
-            self)
+            myInterpreter = mpgsql
+        item = myInterpreter.translateUpdateModel(self.__dateBase__,
+                                                  self.__schema__,
+                                                  self.__table__,
+                                                  self.__mappings__, self)
         return item
 
     def updateSql(self):
-        item=()
-        myInterpreter=None
+        item = ()
+        myInterpreter = None
         if self._interpreter:
-            myInterpreter=self._interpreter
-        elif self.__dbType__.lower()=='pgsql':
+            myInterpreter = self._interpreter
+        elif self.__dbType__.lower() == 'pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
-            myInterpreter=mpgsql
-        item=myInterpreter.translateUpdate(
-            self.__dateBase__,
-            self.__schema__,
-            self.__table__,
-            self.__updateFields__,
-            self.__whereFields__,
-            self.__bracketsWhereFields__)
+            myInterpreter = mpgsql
+        item = myInterpreter.translateUpdate(self.__dateBase__,
+                                             self.__schema__, self.__table__,
+                                             self.__updateFields__,
+                                             self.__whereFields__,
+                                             self.__bracketsWhereFields__)
         return item
-    
-    
+
+
+def useTransaction(*sqls, interpreter=None):
+    """
+    使用事务
+    sqls:sql的集合
+    interpreter:执行的方法
+    """
+    if interpreter is None:
+        import NightingaleORM.pgsqlInterpreter as interpreter
+    return interpreter.translateTransaction(*sqls)
