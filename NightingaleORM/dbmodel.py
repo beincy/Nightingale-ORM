@@ -128,6 +128,7 @@ class Model(dict, metaclass=ModelMetaClass):
         self.__orderFields__ = []
         self.__whereFields__ = []
         self.__updateFields__ = []
+        self.__groupByFields__ = []
         self.__bracketsWhereFields__ = []
         self.__Joins__ = []
         self.__alias__ = ''
@@ -160,15 +161,15 @@ class Model(dict, metaclass=ModelMetaClass):
             self.__dict__[key] = value
         # self[key] = value
 
-    __showFields__ = []
-    __orderFields__ = []
-    __whereFields__ = []
-    __updateFields__ = []
-    __bracketsWhereFields__ = []
-    __Joins__ = []
-    __alias__ = ''
+    # __showFields__ = []
+    # __orderFields__ = []
+    # __whereFields__ = []
+    # __updateFields__ = []
+    # __bracketsWhereFields__ = []
+    # __Joins__ = []
+    # __alias__ = ''
 
-    _interpreter = None  # sql翻译器
+    # _interpreter = None  # sql翻译器
 
     def addBracketsWhere(self, bracket: BracketModel):
         '''
@@ -219,6 +220,13 @@ class Model(dict, metaclass=ModelMetaClass):
         self.__orderFields__.append(OrderMOdel(field, 'ASC'))
         return self
 
+    def addGroupBy(self, field):
+        """
+        添加分组字段
+        """
+        self.__groupByFields__.append(field)
+        return self
+
     def addOrderDesc(self, field):
         '''
         添加排序字段，降序
@@ -263,7 +271,7 @@ class Model(dict, metaclass=ModelMetaClass):
         elif isinstance(setCollection, str):
             self.__updateFields__.append(setCollection)
         return self
-
+    
     def loadInterpreter(self, customModule):
         '''
         添加翻译其，默认自动识别，可手动传入，进行覆盖。不传递则自动识别
@@ -282,8 +290,8 @@ class Model(dict, metaclass=ModelMetaClass):
         item = myInterpreter.translateSelect(
             self.__dateBase__, self.__schema__, self.__table__, self.__alias__,
             self.__showFields__, self.__Joins__, self.__whereFields__,
-            self.__bracketsWhereFields__, self.__orderFields__, self.__pk__,
-            count, 0)
+            self.__bracketsWhereFields__, self.__orderFields__,
+            self.__groupByFields__, self.__pk__, count, 0)
         return item
 
     def pageOfList(self, index, pageSize):
@@ -302,8 +310,9 @@ class Model(dict, metaclass=ModelMetaClass):
         item = myInterpreter.translateSelect(
             self.__dateBase__, self.__schema__, self.__table__, self.__alias__,
             self.__showFields__, self.__Joins__, self.__whereFields__,
-            self.__bracketsWhereFields__, self.__orderFields__, self.__pk__,
-            pageSize, (index - 1) * pageSize)
+            self.__bracketsWhereFields__, self.__orderFields__,
+            self.__groupByFields__, self.__pk__, pageSize,
+            (index - 1) * pageSize)
         # 这里是获取总数的sql
 
         return item

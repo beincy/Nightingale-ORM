@@ -1,5 +1,4 @@
 from NightingaleORM.fields import Field
-import json
 
 
 def translateSelect(database,
@@ -11,6 +10,7 @@ def translateSelect(database,
                     wheres,
                     brackets,
                     orders,
+                    groupBys,
                     pk,
                     count=1,
                     offset=0):
@@ -42,8 +42,11 @@ WHERE 1=1{translateWhere(alias,wheres,parameters)}'''
         sqlStr = f'''{sqlStr} {bracketItem.relation} (1=1 {translateWhere(alias,bracketItem.whereList,parameters)})'''
     # countsql
     sqlStrCountTop = f'''{sqlStrCountTop}{sqlStr}'''
+    # group by
+    sqlStr = f'''{sqlStr} {translateGroupBy(groupBys,alias)}'''
     # order
-    sqlStr = f'''{sqlStr} {translateOrder(orders,pk,alias)}'''
+    if not (len(orders) == 0 and len(groupBys) > 0):
+        sqlStr = f'''{sqlStr} {translateOrder(orders,pk,alias)}'''
     # limit
     if count > 0:
         sqlStr = f'''{sqlStr} 
@@ -271,3 +274,19 @@ def translateTransaction(*sqls):
         finalSql = f'''{finalSql}\n{sql}'''
     finalSql = f'''{finalSql}\nCOMMIT;'''
     return finalSql
+
+
+def translateGroupBy(groupBys, alias):
+    """
+    添加分组
+    """
+    sqlStr = ''
+    if groupBys and len(groupBys) > 0:
+        sqlStr = f'''\nGROUP BY'''
+        for groupBy in groupBys:
+            if isinstance(groupBy, str):
+                sqlStr = f'''{sqlStr} {groupBy},'''
+            else:
+                sqlStr = f'''{sqlStr} {'' if len(alias)<=0 else f'{alias}.'}{groupBy.name},'''
+        sqlStr = sqlStr.strip(',')
+    return sqlStr

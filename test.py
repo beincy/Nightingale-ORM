@@ -89,7 +89,7 @@ def mian():
     dal.addWhere(("tassignorid", "in", "1,2"))
     dal.addWhere(("tassignorid", "in", [1, 2]))
     dal.addWhere(TaskModel.tremark == 'das')
-    dal = dal.endBracket()
+    dal = dal.endBracket().addGroupBy(TaskModel.tflag)
     sql, parameters, topsql = dal.selectSql()
     print(useTransaction(sql))
     print(sql)
