@@ -82,7 +82,7 @@ def translateWhere(alias, wheres, parameters):
             elif whereField.operation == 'RIGHT LIKE':
                 parameters.append(f'{whereField.value}%')
                 sqlStr = f'''{sqlStr} LIKE ${len(parameters)}'''
-            elif whereField.operation == 'RIGHT LIKE':
+            elif whereField.operation == 'LIKE':
                 parameters.append(f'%{whereField.value}%')
                 sqlStr = f'''{sqlStr} LIKE ${len(parameters)}'''
             else:
