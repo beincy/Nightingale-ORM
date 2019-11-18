@@ -115,7 +115,7 @@ def translateJoin(joins, parameters):
                     if all([onList[0], onList[0].fields]):
                         joinSchemaStr = f'.{onList[0].fields.__schema__}' if onList[
                             0].fields.__schema__ else ''
-                        joinTable = f'''{onList[0].fields.__dateBase__}{joinSchemaStr}."{onList[0].fields.__table__}" '''
+                        joinTable = f'''{onList[0].fields.__dataBase__}{joinSchemaStr}."{onList[0].fields.__table__}" '''
                     sqlStr = f'''{sqlStr} 
 {joinfield.joinType} {joinTable} ON'''
                     isFirst = True

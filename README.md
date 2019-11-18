@@ -20,7 +20,7 @@ from NightingaleORM.dbmodel import Model
 from NightingaleORM.fields import StringField,IntegerField,DateTimeField,FloatField
 class TaskModel(Model):
     __dbType__='pgsql'
-    __dateBase__='resource'
+    __dataBase__='resource'
     __schema__='DataAnnotations'
 
     tid=IntegerField('tid',True,0)

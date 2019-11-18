@@ -112,7 +112,7 @@ where c.relname = '{tableName}' and a.attrelid = c.oid and a.attnum>0;
         ModelName = ModelName[:1].upper() + ModelName[1:]
         f.write(f'class {ModelName}Model(Model):' + '\n')
         f.write(f"    __dbType__='pgsql'" + '\n')
-        f.write(f"    __dateBase__='{dbBaseName}'" + '\n')
+        f.write(f"    __dataBase__='{dbBaseName}'" + '\n')
         f.write(f"    __schema__='{schemasName}'" + '\n')
         f.write(f"    __table__='{tableName}'" + '\n')
         f.write('\n')

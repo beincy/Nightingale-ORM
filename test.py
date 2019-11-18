@@ -8,7 +8,7 @@ from PYLINQ import PYLINQ
 
 class TaskModel(Model):
     __dbType__ = 'pgsql'
-    __dateBase__ = 'resource'
+    __dataBase__ = 'resource'
     __schema__ = 'DataAnnotations'
 
     tid = IntegerField('tid', True, 0)
