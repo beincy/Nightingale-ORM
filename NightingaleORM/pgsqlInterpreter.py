@@ -82,7 +82,7 @@ def translateWhere(alias, wheres, parameters):
             elif whereField.operation == 'RIGHT LIKE':
                 parameters.append(f'{whereField.value}%')
                 sqlStr = f'''{sqlStr} LIKE ${len(parameters)}'''
-            elif whereField.operation == 'RIGHT LIKE':
+            elif whereField.operation == 'LIKE':
                 parameters.append(f'%{whereField.value}%')
                 sqlStr = f'''{sqlStr} LIKE ${len(parameters)}'''
             else:
@@ -115,7 +115,7 @@ def translateJoin(joins, parameters):
                     if all([onList[0], onList[0].fields]):
                         joinSchemaStr = f'.{onList[0].fields.__schema__}' if onList[
                             0].fields.__schema__ else ''
-                        joinTable = f'''{onList[0].fields.__dateBase__}{joinSchemaStr}."{onList[0].fields.__table__}" '''
+                        joinTable = f'''{onList[0].fields.__dataBase__}{joinSchemaStr}."{onList[0].fields.__table__}" '''
                     sqlStr = f'''{sqlStr} 
 {joinfield.joinType} {joinTable} ON'''
                     isFirst = True

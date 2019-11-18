@@ -1,5 +1,4 @@
 from NightingaleORM.fields import Field
-import datetime
 
 
 class ModelMetaClass(type):
@@ -7,7 +6,8 @@ class ModelMetaClass(type):
         if name == "Model":
             return type.__new__(cls, name, bases, attrs)
         dateBaseType = attrs.get('__dbType__', '')  # 数据库类型
-        dateBaseName = attrs.get('__dateBase__', '')  # 数据库名称
+        dataBaseName = attrs.get('__dataBase__') or attrs.get(
+            '__dateBase__', '')  # 数据库名称
         schemaName = attrs.get('__schema__', '')  # 如果有schema，schema的名称
         tableName = attrs.get('__table__', None) or name.replace(
             'Model', '').lower()  # 表名称，如果没有默认实体去掉Model
@@ -19,7 +19,7 @@ class ModelMetaClass(type):
         for k, v in attrs.items():
             if isinstance(v, Field):
                 mappings[k] = v
-                mappings[k].__dateBase__ = dateBaseName
+                mappings[k].__dataBase__ = dataBaseName
                 mappings[k].__schema__ = schemaName
                 mappings[k].__table__ = tableName
                 if v.primary_key:
@@ -35,7 +35,8 @@ class ModelMetaClass(type):
         # for k in mappings:
         #     attrs.pop(k)
         attrs['__mappings__'] = mappings  # 保存属性和列的映射关系
-        attrs['__dateBase__'] = dateBaseName  # 保存db name
+        attrs['__dateBase__'] = dataBaseName  # 保存db name
+        attrs['__dataBase__'] = dataBaseName  # 保存db name
         attrs['__schema__'] = schemaName  # 保存schema
         attrs['__table__'] = tableName  # 保存table name
         attrs['__dbType__'] = dateBaseType  # 保存数据库类型
@@ -83,10 +84,10 @@ class ConditionModel:
     # _relation='' #与前一个条件的关系
 
     def __init__(self, fields, operation, value):
-        self.fields = ''  #字段
-        self.operation = '='  #操作符
-        self.value = ''  #值
-        self._relation = ''  #与前一个条件的关系
+        self.fields = ''  # 字段
+        self.operation = '='  # 操作符
+        self.value = ''  # 值
+        self._relation = ''  # 与前一个条件的关系
         self.fields, self.operation, self.value = fields, operation.upper(
         ), value
 
@@ -104,7 +105,7 @@ class JoinConditionModel():
     # joinType=''#the type of  join
     # onList=[] # the condition affter on
     def __init__(self, joinType):
-        self.joinType = ''  #the type of  join
+        self.joinType = ''  # the type of  join
         self.onList = []  # the condition affter on
         self.joinType = joinType.upper()
 
@@ -271,7 +272,7 @@ class Model(dict, metaclass=ModelMetaClass):
         elif isinstance(setCollection, str):
             self.__updateFields__.append(setCollection)
         return self
-    
+
     def loadInterpreter(self, customModule):
         '''
         添加翻译其，默认自动识别，可手动传入，进行覆盖。不传递则自动识别
@@ -288,7 +289,7 @@ class Model(dict, metaclass=ModelMetaClass):
             import NightingaleORM.pgsqlInterpreter as mpgsql
             myInterpreter = mpgsql
         item = myInterpreter.translateSelect(
-            self.__dateBase__, self.__schema__, self.__table__, self.__alias__,
+            self.__dataBase__, self.__schema__, self.__table__, self.__alias__,
             self.__showFields__, self.__Joins__, self.__whereFields__,
             self.__bracketsWhereFields__, self.__orderFields__,
             self.__groupByFields__, self.__pk__, count, 0)
@@ -308,7 +309,7 @@ class Model(dict, metaclass=ModelMetaClass):
             myInterpreter = mpgsql
         # 这里是获取实际的值
         item = myInterpreter.translateSelect(
-            self.__dateBase__, self.__schema__, self.__table__, self.__alias__,
+            self.__dataBase__, self.__schema__, self.__table__, self.__alias__,
             self.__showFields__, self.__Joins__, self.__whereFields__,
             self.__bracketsWhereFields__, self.__orderFields__,
             self.__groupByFields__, self.__pk__, pageSize,
@@ -328,7 +329,7 @@ class Model(dict, metaclass=ModelMetaClass):
             import NightingaleORM.pgsqlInterpreter as mpgsql
             myInterpreter = mpgsql
 
-        item = myInterpreter.translateInsert(self.__dateBase__,
+        item = myInterpreter.translateInsert(self.__dataBase__,
                                              self.__schema__, self.__table__,
                                              self.__mappings__, self)
         return item
@@ -343,7 +344,7 @@ class Model(dict, metaclass=ModelMetaClass):
         elif self.__dbType__.lower() == 'pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
             myInterpreter = mpgsql
-        item = myInterpreter.translateUpdateModel(self.__dateBase__,
+        item = myInterpreter.translateUpdateModel(self.__dataBase__,
                                                   self.__schema__,
                                                   self.__table__,
                                                   self.__mappings__, self)
@@ -357,7 +358,7 @@ class Model(dict, metaclass=ModelMetaClass):
         elif self.__dbType__.lower() == 'pgsql':
             import NightingaleORM.pgsqlInterpreter as mpgsql
             myInterpreter = mpgsql
-        item = myInterpreter.translateUpdate(self.__dateBase__,
+        item = myInterpreter.translateUpdate(self.__dataBase__,
                                              self.__schema__, self.__table__,
                                              self.__updateFields__,
                                              self.__whereFields__,
