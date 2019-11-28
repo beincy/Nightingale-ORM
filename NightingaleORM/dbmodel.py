@@ -160,17 +160,6 @@ class Model(dict, metaclass=ModelMetaClass):
             self[key] = Field.fieldTest(self.__mappings__[key], value)
         elif key.find("_") == 0:
             self.__dict__[key] = value
-        # self[key] = value
-
-    # __showFields__ = []
-    # __orderFields__ = []
-    # __whereFields__ = []
-    # __updateFields__ = []
-    # __bracketsWhereFields__ = []
-    # __Joins__ = []
-    # __alias__ = ''
-
-    # _interpreter = None  # sql翻译器
 
     def addBracketsWhere(self, bracket: BracketModel):
         '''
